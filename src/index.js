@@ -67,11 +67,26 @@ app.get('/api/search', async (req, res) => {
 // 获取文件内容
 app.get('/api/file/content', async (req, res) => {
   try {
-    const filePath = req.query.path;
+    let filePath = req.query.path;
     console.log('请求文件内容:', filePath);
 
     if (!filePath) {
       return res.status(400).json({ error: '缺少文件路径' });
+    }
+
+    // 特殊处理Windows驱动器根目录的情况
+    if (/^[A-Z]:$/i.test(filePath)) {
+      filePath = filePath + '\\'; // 添加反斜杠使其成为有效的绝对路径
+      console.log('处理驱动器根目录路径:', filePath);
+    }
+
+    // 确保路径使用正确的分隔符（Windows上）
+    filePath = filePath.replace(/\//g, '\\');
+
+    // 确保是绝对路径
+    if (!path.isAbsolute(filePath)) {
+      console.error('路径不是绝对路径:', filePath);
+      return res.status(400).json({ error: '路径必须是绝对路径' });
     }
 
     // 检查文件是否存在
@@ -160,10 +175,24 @@ app.get('/api/file/content', async (req, res) => {
 // 文件下载
 app.get('/api/file/download', (req, res) => {
   try {
-    const filePath = req.query.path;
+    let filePath = req.query.path;
     console.log('请求下载文件:', filePath);
 
-    if (!filePath || !fs.existsSync(filePath)) {
+    if (!filePath) {
+      return res.status(404).send('缺少文件路径');
+    }
+
+    // 特殊处理Windows驱动器根目录的情况
+    if (/^[A-Z]:$/i.test(filePath)) {
+      filePath = filePath + '\\'; // 添加反斜杠使其成为有效的绝对路径
+      console.log('处理驱动器根目录路径:', filePath);
+    }
+
+    // 确保路径使用正确的分隔符（Windows上）
+    filePath = filePath.replace(/\//g, '\\');
+
+    // 检查文件是否存在
+    if (!fs.existsSync(filePath)) {
       return res.status(404).send('文件不存在');
     }
 
@@ -173,8 +202,8 @@ app.get('/api/file/download', (req, res) => {
     // 设置响应头，指定文件名
     res.setHeader('Content-Disposition', `attachment; filename*=UTF-8''${encodeURIComponent(fileName)}`);
 
-    // 发送文件
-    res.sendFile(filePath);
+    // 发送文件，使用绝对路径
+    res.sendFile(path.resolve(filePath));
   } catch (error) {
     console.error('文件下载失败:', error);
     res.status(500).send('文件下载失败: ' + error.message);
@@ -222,6 +251,7 @@ app.get('/media/:token', (req, res) => {
     // 对于图片和小文件，直接发送文件
     if (ext.match(/\.(jpg|jpeg|png|gif|bmp|ico|svg|webp)$/i)) {
       console.log('发送图片文件:', filePath);
+      // 使用绝对路径发送文件，确保路径正确
       return res.sendFile(path.resolve(filePath));
     }
 
@@ -315,9 +345,24 @@ function getMimeType(extension) {
 // 删除文件
 app.delete('/api/file', async (req, res) => {
   try {
-    const filePath = req.query.path;
+    let filePath = req.query.path;
     if (!filePath) {
       return res.status(400).json({ error: '缺少文件路径' });
+    }
+
+    // 特殊处理Windows驱动器根目录的情况
+    if (/^[A-Z]:$/i.test(filePath)) {
+      filePath = filePath + '\\'; // 添加反斜杠使其成为有效的绝对路径
+      console.log('处理驱动器根目录路径:', filePath);
+    }
+
+    // 确保路径使用正确的分隔符（Windows上）
+    filePath = filePath.replace(/\//g, '\\');
+
+    // 确保是绝对路径
+    if (!path.isAbsolute(filePath)) {
+      console.error('路径不是绝对路径:', filePath);
+      return res.status(400).json({ error: '路径必须是绝对路径' });
     }
 
     // 检查文件是否存在
@@ -337,9 +382,24 @@ app.delete('/api/file', async (req, res) => {
 // 重命名文件
 app.put('/api/file/rename', async (req, res) => {
   try {
-    const { oldPath, newName } = req.body;
+    let { oldPath, newName } = req.body;
     if (!oldPath || !newName) {
       return res.status(400).json({ error: '缺少必要参数' });
+    }
+
+    // 特殊处理Windows驱动器根目录的情况
+    if (/^[A-Z]:$/i.test(oldPath)) {
+      oldPath = oldPath + '\\'; // 添加反斜杠使其成为有效的绝对路径
+      console.log('处理驱动器根目录路径:', oldPath);
+    }
+
+    // 确保路径使用正确的分隔符（Windows上）
+    oldPath = oldPath.replace(/\//g, '\\');
+
+    // 确保是绝对路径
+    if (!path.isAbsolute(oldPath)) {
+      console.error('路径不是绝对路径:', oldPath);
+      return res.status(400).json({ error: '路径必须是绝对路径' });
     }
 
     // 检查文件是否存在
@@ -371,8 +431,20 @@ app.get('/api/folder', async (req, res) => {
     let folderPath = req.query.path || '';
     console.log('请求访问文件夹:', folderPath);
 
+    // 特殊处理Windows驱动器根目录的情况
+    if (/^[A-Z]:$/i.test(folderPath)) {
+      folderPath = folderPath + '\\'; // 添加反斜杠使其成为有效的绝对路径
+      console.log('处理驱动器根目录路径:', folderPath);
+    }
+
     // 确保路径使用正确的分隔符（Windows上）
     folderPath = folderPath.replace(/\//g, '\\');
+
+    // 确保是绝对路径
+    if (!path.isAbsolute(folderPath)) {
+      console.error('路径不是绝对路径:', folderPath);
+      return res.status(400).json({ error: '路径必须是绝对路径' });
+    }
 
     // 检查文件夹是否存在
     if (!fs.existsSync(folderPath)) {
@@ -427,11 +499,26 @@ app.get('/api/folder', async (req, res) => {
 // 获取文件详细信息
 app.get('/api/file/details', async (req, res) => {
   try {
-    const filePath = req.query.path;
+    let filePath = req.query.path;
     console.log('请求文件详细信息:', filePath);
 
     if (!filePath) {
       return res.status(400).json({ error: '缺少文件路径' });
+    }
+
+    // 特殊处理Windows驱动器根目录的情况
+    if (/^[A-Z]:$/i.test(filePath)) {
+      filePath = filePath + '\\'; // 添加反斜杠使其成为有效的绝对路径
+      console.log('处理驱动器根目录路径:', filePath);
+    }
+
+    // 确保路径使用正确的分隔符（Windows上）
+    filePath = filePath.replace(/\//g, '\\');
+
+    // 确保是绝对路径
+    if (!path.isAbsolute(filePath)) {
+      console.error('路径不是绝对路径:', filePath);
+      return res.status(400).json({ error: '路径必须是绝对路径' });
     }
 
     // 检查文件是否存在

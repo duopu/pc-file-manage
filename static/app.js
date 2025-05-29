@@ -103,6 +103,9 @@ document.addEventListener("DOMContentLoaded", () => {
   // 应用保存的主题设置
   applyTheme(currentTheme);
 
+  // 修正快捷导航路径
+  fixShortcutPaths();
+
   // 加载磁盘驱动器
   loadDrives();
 
@@ -181,6 +184,17 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 });
+
+// 修正快捷导航路径，确保使用绝对路径
+function fixShortcutPaths() {
+  document.querySelectorAll('.shortcut-list .list-group-item').forEach(item => {
+    const path = item.dataset.path;
+    if (path && path.startsWith('C:/')) {
+      // 确保路径格式正确，使用绝对路径
+      item.dataset.path = path;
+    }
+  });
+}
 
 // 绑定主题切换按钮事件
 function bindThemeToggle() {
@@ -301,12 +315,15 @@ function addToHistory(path) {
 // 不添加历史记录的加载文件夹
 function loadFolderWithoutHistory(path) {
   try {
+    // 处理Windows驱动器盘符
+    let folderPath = path;
+
     // 显示加载指示器
     fileTable.style.display = "none";
     loadingIndicator.style.display = "flex";
 
     // 发送请求获取文件夹内容
-    fetch(`/api/folder?path=${encodeURIComponent(path)}`)
+    fetch(`/api/folder?path=${encodeURIComponent(folderPath)}`)
       .then(response => {
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
@@ -315,16 +332,16 @@ function loadFolderWithoutHistory(path) {
       })
       .then(data => {
         // 更新当前路径
-        currentPath = path;
+        currentPath = folderPath;
         updatePathDisplay(currentPath);
 
         // 清空文件列表
         fileList.innerHTML = "";
 
         // 如果不是根驱动器，添加"返回上一级"项
-        if (path.length > 3) {
+        if (folderPath.length > 3 || (folderPath.length === 3 && folderPath.endsWith("/"))) {
           // 例如 "C:/" 长度为3
-          const parentPath = getParentPath(path);
+          const parentPath = getParentPath(folderPath);
           const parentRow = createFileRow({
             name: "..",
             path: parentPath,
@@ -380,8 +397,8 @@ function loadFolderWithoutHistory(path) {
         // 添加返回按钮事件
         document.getElementById("backBtn").addEventListener("click", () => {
           // 尝试返回上一级，如果是根目录则加载驱动器列表
-          if (path.length > 3) {
-            loadFolder(getParentPath(path));
+          if (folderPath.length > 3) {
+            loadFolder(getParentPath(folderPath));
           } else {
             // 如果是根目录，尝试重新加载驱动器
             loadDrives();
@@ -624,13 +641,16 @@ function bindEventListeners() {
 // 加载文件夹内容
 async function loadFolder(path) {
   try {
+    // 处理Windows驱动器盘符
+    let folderPath = path;
+
     // 显示加载指示器
     fileTable.style.display = "none";
     loadingIndicator.style.display = "flex";
 
     // 发送请求获取文件夹内容
     const response = await fetch(
-      `/api/folder?path=${encodeURIComponent(path)}`
+      `/api/folder?path=${encodeURIComponent(folderPath)}`
     );
 
     if (!response.ok) {
@@ -640,19 +660,19 @@ async function loadFolder(path) {
     const data = await response.json();
 
     // 添加到历史记录
-    addToHistory(path);
+    addToHistory(folderPath);
 
     // 更新当前路径
-    currentPath = path;
+    currentPath = folderPath;
     updatePathDisplay(currentPath);
 
     // 清空文件列表
     fileList.innerHTML = "";
 
     // 如果不是根驱动器，添加"返回上一级"项
-    if (path.length > 3) {
+    if (folderPath.length > 3 || (folderPath.length === 3 && folderPath.endsWith("/"))) {
       // 例如 "C:/" 长度为3
-      const parentPath = getParentPath(path);
+      const parentPath = getParentPath(folderPath);
       const parentRow = createFileRow({
         name: "..",
         path: parentPath,
@@ -1042,7 +1062,7 @@ function getParentPath(path) {
   path = path.replace(/\\/g, "/");
 
   // 如果路径以斜杠结尾，则去掉结尾的斜杠
-  if (path.endsWith("/")) {
+  if (path.endsWith("/") && path.length > 3) { // 保留 "C:/" 格式
     path = path.slice(0, -1);
   }
 
@@ -1051,15 +1071,31 @@ function getParentPath(path) {
     return path.slice(0, 2);
   }
 
+  // 分割路径
   const parts = path.split("/");
+
+  // 如果只有一个部分，且是驱动器盘符，直接返回
+  if (parts.length === 1 && /^[A-Z]:$/i.test(parts[0])) {
+    return parts[0];
+  }
+
+  // 移除最后一个部分
   parts.pop();
 
   // 如果是驱动器路径的子目录，确保返回的是驱动器根目录
   if (parts.length === 1 && parts[0].endsWith(":")) {
-    return parts[0];
+    return parts[0] + "/"; // 返回形如 "C:/" 的格式
   }
 
-  return parts.join("/") || path.slice(0, 2);
+  // 重新组合路径
+  const parentPath = parts.join("/");
+
+  // 如果父路径为空，但原路径以驱动器盘符开头，返回驱动器盘符
+  if (!parentPath && /^[A-Z]:/i.test(path)) {
+    return path.slice(0, 2);
+  }
+
+  return parentPath || path.slice(0, 2);
 }
 
 // 更新面包屑导航
