@@ -16,6 +16,12 @@ let touchTimer = null;
 let navigationHistory = [];
 let currentHistoryIndex = -1;
 
+// 添加主题相关变量
+let currentTheme = localStorage.getItem('theme') || 'light';
+
+// 添加变量用于跟踪当前打开的下拉菜单
+let currentOpenDropdown = null;
+
 // DOM 元素
 const fileList = document.getElementById("fileList");
 const fileTable = document.getElementById("fileTable");
@@ -48,6 +54,7 @@ const unsupportedFileViewer = document.getElementById("unsupportedFileViewer");
 const goBackBtn = document.getElementById("goBackBtn");
 const goForwardBtn = document.getElementById("goForwardBtn");
 const goUpBtn = document.getElementById("goUpBtn");
+const themeToggleBtn = document.getElementById("themeToggleBtn");
 
 // 新增的删除确认和提示元素
 const deleteConfirmModal = new bootstrap.Modal(document.getElementById('deleteConfirmModal'));
@@ -67,17 +74,18 @@ const fullscreenVideo = document.getElementById("fullscreenVideo");
 
 // 响应式布局元素
 const sidebar = document.getElementById("sidebar");
-const toggleSidebarBtn = document.getElementById("toggleSidebar");
 const mainContent = document.getElementById("mainContent");
 
 // 移动端导航元素
 const mobileNav = document.getElementById("mobileNav");
 const showSidebarBtn = document.getElementById("showSidebarBtn");
 const homeBtn = document.getElementById("homeBtn");
-const searchMobileBtn = document.getElementById("searchMobileBtn");
 
 // 页面加载完成后初始化
 document.addEventListener("DOMContentLoaded", () => {
+  // 应用保存的主题设置
+  applyTheme(currentTheme);
+
   // 加载磁盘驱动器
   loadDrives();
 
@@ -86,6 +94,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // 绑定导航按钮事件
   bindNavigationButtons();
+
+  // 绑定主题切换按钮事件
+  bindThemeToggle();
 
   // 绑定媒体预览关闭按钮事件
   mediaCloseBtn.addEventListener("click", closeMediaPreview);
@@ -99,11 +110,6 @@ document.addEventListener("DOMContentLoaded", () => {
       closeMediaPreview();
     }
   });
-
-  // 绑定侧边栏切换按钮
-  if (toggleSidebarBtn) {
-    toggleSidebarBtn.addEventListener("click", toggleSidebar);
-  }
 
   // 绑定移动端底部导航栏事件
   bindMobileNavEvents();
@@ -137,7 +143,64 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     });
   }
+
+  // 监听下拉菜单打开事件，确保一次只打开一个下拉菜单
+  document.addEventListener('show.bs.dropdown', (e) => {
+    // 如果有其他已打开的下拉菜单，关闭它
+    if (currentOpenDropdown && currentOpenDropdown !== e.target) {
+      const dropdown = bootstrap.Dropdown.getInstance(currentOpenDropdown.querySelector('.dropdown-toggle'));
+      if (dropdown) {
+        dropdown.hide();
+      }
+    }
+    // 更新当前打开的下拉菜单
+    currentOpenDropdown = e.target;
+  });
+
+  // 监听下拉菜单关闭事件
+  document.addEventListener('hidden.bs.dropdown', (e) => {
+    if (currentOpenDropdown === e.target) {
+      currentOpenDropdown = null;
+    }
+  });
 });
+
+// 绑定主题切换按钮事件
+function bindThemeToggle() {
+  if (themeToggleBtn) {
+    themeToggleBtn.addEventListener("click", toggleTheme);
+
+    // 根据当前主题设置按钮图标
+    updateThemeIcon();
+  }
+}
+
+// 切换主题
+function toggleTheme() {
+  currentTheme = currentTheme === 'light' ? 'dark' : 'light';
+  applyTheme(currentTheme);
+  localStorage.setItem('theme', currentTheme);
+}
+
+// 应用主题
+function applyTheme(theme) {
+  document.documentElement.setAttribute('data-bs-theme', theme);
+  updateThemeIcon();
+}
+
+// 更新主题图标
+function updateThemeIcon() {
+  if (themeToggleBtn) {
+    const icon = themeToggleBtn.querySelector('i');
+    if (icon) {
+      if (currentTheme === 'dark') {
+        icon.className = 'bi bi-sun-fill';
+      } else {
+        icon.className = 'bi bi-moon-fill';
+      }
+    }
+  }
+}
 
 // 绑定导航按钮事件
 function bindNavigationButtons() {
@@ -746,54 +809,97 @@ function createFileRow(file) {
     const isImage = imageExts.includes(ext);
     const isVideo = videoExts.includes(ext);
 
-    // 复制按钮 (仅对图片和视频文件显示)
-    if (isImage || isVideo) {
-      const copyBtn = createActionButton("复制文件名", "bi-clipboard", () => {
-        navigator.clipboard
-          .writeText(file.name)
-          .then(() => {
-            console.warn("文件名已复制到剪贴板");
-            // 显示一个临时提示
-            const toast = document.createElement("div");
-            toast.className = "toast-notification";
-            toast.textContent = "文件名已复制";
-            document.body.appendChild(toast);
-            setTimeout(() => {
-              toast.classList.add("show");
-              setTimeout(() => {
-                toast.classList.remove("show");
-                setTimeout(() => {
-                  document.body.removeChild(toast);
-                }, 300);
-              }, 2000);
-            }, 10);
-          })
-          .catch((err) => {
-            console.error("复制失败:", err);
-          });
-      });
-      actionsDiv.appendChild(copyBtn);
-    }
-
-    // 查看按钮
-    if (!file.isDirectory) {
-      const viewBtn = createActionButton("查看", "bi-eye", () =>
-        viewFile(file)
-      );
-      actionsDiv.appendChild(viewBtn);
-    }
-
-    // 重命名按钮
+    // 编辑按钮 - 所有文件都显示
     const renameBtn = createActionButton("重命名", "bi-pencil", () =>
       showRenameModal(file)
     );
     actionsDiv.appendChild(renameBtn);
 
-    // 删除按钮
-    const deleteBtn = createActionButton("删除", "bi-trash", () =>
-      showDeleteConfirmModal(file.path)
-    );
-    actionsDiv.appendChild(deleteBtn);
+    // 图片和视频文件添加更多按钮和下拉菜单
+    if (isImage || isVideo || !file.isDirectory) {
+      // 创建下拉菜单容器
+      const dropdownContainer = document.createElement("div");
+      dropdownContainer.className = "dropdown";
+
+      // 创建更多按钮
+      const moreBtn = document.createElement("button");
+      moreBtn.className = "btn btn-sm btn-light file-action-btn more-actions-btn dropdown-toggle";
+      moreBtn.title = "更多操作";
+      moreBtn.setAttribute("data-bs-toggle", "dropdown");
+      moreBtn.setAttribute("aria-expanded", "false");
+      moreBtn.innerHTML = `<i class="bi bi-three-dots"></i>`;
+
+      // 创建下拉菜单
+      const dropdownMenu = document.createElement("div");
+      dropdownMenu.className = "dropdown-menu dropdown-menu-end";
+
+      // 查看按钮 - 移到下拉菜单中
+      if (!file.isDirectory) {
+        const viewItem = document.createElement("a");
+        viewItem.className = "dropdown-item";
+        viewItem.href = "#";
+        viewItem.innerHTML = `<i class="bi bi-eye"></i> 查看`;
+        viewItem.addEventListener("click", (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          viewFile(file);
+        });
+        dropdownMenu.appendChild(viewItem);
+      }
+
+      // 复制按钮 - 仅对图片和视频文件显示
+      if (isImage || isVideo) {
+        const copyItem = document.createElement("a");
+        copyItem.className = "dropdown-item";
+        copyItem.href = "#";
+        copyItem.innerHTML = `<i class="bi bi-clipboard"></i> 复制文件名`;
+        copyItem.addEventListener("click", (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+
+          navigator.clipboard
+            .writeText(file.name)
+            .then(() => {
+              showToast("文件名已复制到剪贴板", "success");
+            })
+            .catch((err) => {
+              console.error("复制失败:", err);
+              showToast("复制失败", "error");
+            });
+        });
+        dropdownMenu.appendChild(copyItem);
+      }
+
+      // 删除按钮
+      const deleteItem = document.createElement("a");
+      deleteItem.className = "dropdown-item";
+      deleteItem.href = "#";
+      deleteItem.innerHTML = `<i class="bi bi-trash"></i> 删除`;
+      deleteItem.addEventListener("click", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        showDeleteConfirmModal(file.path);
+      });
+      dropdownMenu.appendChild(deleteItem);
+
+      // 组装下拉菜单
+      dropdownContainer.appendChild(moreBtn);
+      dropdownContainer.appendChild(dropdownMenu);
+
+      // 添加到操作栏
+      actionsDiv.appendChild(dropdownContainer);
+
+      // 防止点击下拉菜单时触发行点击事件
+      dropdownContainer.addEventListener("click", (e) => {
+        e.stopPropagation();
+      });
+    } else {
+      // 非图片和视频文件直接显示删除按钮
+      const deleteBtn = createActionButton("删除", "bi-trash", () =>
+        showDeleteConfirmModal(file.path)
+      );
+      actionsDiv.appendChild(deleteBtn);
+    }
 
     actionsCell.appendChild(actionsDiv);
   }
@@ -1506,23 +1612,12 @@ function createSearchResultRow(file, query) {
           .writeText(file.name)
           .then(() => {
             console.warn("文件名已复制到剪贴板");
-            // 显示一个临时提示
-            const toast = document.createElement("div");
-            toast.className = "toast-notification";
-            toast.textContent = "文件名已复制";
-            document.body.appendChild(toast);
-            setTimeout(() => {
-              toast.classList.add("show");
-              setTimeout(() => {
-                toast.classList.remove("show");
-                setTimeout(() => {
-                  document.body.removeChild(toast);
-                }, 300);
-              }, 2000);
-            }, 10);
+            // 使用居中提示替代旧的提示方式
+            showCenteredMessage("文件名已复制");
           })
           .catch((err) => {
             console.error("复制失败:", err);
+            showCenteredMessage("复制失败", "error");
           });
       });
       actionsDiv.appendChild(copyBtn);
@@ -1554,6 +1649,40 @@ function createSearchResultRow(file, query) {
   return row;
 }
 
+// 显示居中的消息提示
+function showCenteredMessage(message, type = 'success') {
+  // 创建或获取提示元素
+  let messageElement = document.getElementById('centeredMessage');
+
+  if (!messageElement) {
+    messageElement = document.createElement('div');
+    messageElement.id = 'centeredMessage';
+    messageElement.className = 'centered-message';
+    document.body.appendChild(messageElement);
+  }
+
+  // 设置消息内容
+  messageElement.textContent = message;
+
+  // 设置样式类型
+  messageElement.className = 'centered-message';
+  if (type === 'error') {
+    messageElement.classList.add('error');
+  } else if (type === 'warning') {
+    messageElement.classList.add('warning');
+  } else {
+    messageElement.classList.add('success');
+  }
+
+  // 显示消息
+  messageElement.classList.add('show');
+
+  // 设置定时器，自动隐藏
+  setTimeout(() => {
+    messageElement.classList.remove('show');
+  }, 2000);
+}
+
 // 绑定移动端导航事件
 function bindMobileNavEvents() {
   // 导航按钮点击事件
@@ -1573,16 +1702,6 @@ function bindMobileNavEvents() {
       console.log("首页按钮被点击");
       // 回到根目录（默认C盘）
       loadFolder("C:");
-    });
-  }
-
-  // 搜索按钮点击事件
-  if (searchMobileBtn) {
-    searchMobileBtn.addEventListener("click", function (e) {
-      e.preventDefault();
-      console.log("搜索按钮被点击");
-      // 聚焦到搜索框
-      searchInput.focus();
     });
   }
 

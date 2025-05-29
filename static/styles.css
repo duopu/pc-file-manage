@@ -4,6 +4,117 @@ body {
     overflow: hidden;
 }
 
+/* 居中消息提示样式 */
+.centered-message {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0.8);
+    background-color: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 12px 24px;
+    border-radius: 8px;
+    z-index: 2000;
+    opacity: 0;
+    transition: transform 0.3s, opacity 0.3s;
+    text-align: center;
+    min-width: 200px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    pointer-events: none;
+}
+
+.centered-message.show {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+}
+
+.centered-message.success {
+    background-color: rgba(40, 167, 69, 0.9);
+}
+
+.centered-message.error {
+    background-color: rgba(220, 53, 69, 0.9);
+}
+
+.centered-message.warning {
+    background-color: rgba(255, 193, 7, 0.9);
+}
+
+/* 深色模式样式 */
+[data-bs-theme="dark"] {
+    --bs-body-bg: #121212;
+    --bs-body-color: #e0e0e0;
+}
+
+[data-bs-theme="dark"] .bg-light {
+    background-color: #1e1e1e !important;
+}
+
+[data-bs-theme="dark"] .bg-white {
+    background-color: #1e1e1e !important;
+}
+
+[data-bs-theme="dark"] .bg-primary {
+    background-color: #0d47a1 !important;
+}
+
+[data-bs-theme="dark"] .border-bottom,
+[data-bs-theme="dark"] .border-top,
+[data-bs-theme="dark"] .border-end {
+    border-color: #333 !important;
+}
+
+[data-bs-theme="dark"] .table {
+    color: #e0e0e0;
+}
+
+[data-bs-theme="dark"] .table-hover tbody tr:hover {
+    background-color: rgba(255, 255, 255, 0.075);
+}
+
+[data-bs-theme="dark"] .list-group-item {
+    background-color: #1e1e1e;
+    color: #e0e0e0;
+    border-color: #333;
+}
+
+[data-bs-theme="dark"] .list-group-item-action:hover {
+    background-color: #2c2c2c;
+}
+
+[data-bs-theme="dark"] .breadcrumb-item a {
+    color: #90caf9;
+}
+
+[data-bs-theme="dark"] .path-navigation .has-overflow::after {
+    background: linear-gradient(to right, rgba(30, 30, 30, 0), rgba(30, 30, 30, 1));
+}
+
+[data-bs-theme="dark"] .path-navigation .has-overflow::before {
+    background: linear-gradient(to left, rgba(30, 30, 30, 0), rgba(30, 30, 30, 1));
+}
+
+[data-bs-theme="dark"] #fileContentViewer {
+    background-color: #1e1e1e !important;
+    color: #e0e0e0;
+    border-color: #333 !important;
+}
+
+[data-bs-theme="dark"] .modal-content {
+    background-color: #1e1e1e;
+    color: #e0e0e0;
+}
+
+[data-bs-theme="dark"] .modal-header,
+[data-bs-theme="dark"] .modal-footer {
+    border-color: #333;
+}
+
+[data-bs-theme="dark"] .mobile-nav {
+    background-color: #1e1e1e;
+    border-top-color: #333;
+}
+
 /* 导航按钮样式 */
 .navigation-buttons {
     display: flex;
@@ -40,12 +151,26 @@ body {
     cursor: not-allowed;
 }
 
+/* 主题切换按钮动画 */
+#themeToggleBtn i {
+    transition: transform 0.3s ease;
+}
+
+#themeToggleBtn:hover i {
+    transform: rotate(30deg);
+}
+
 /* 移动端导航按钮优化 */
 @media (max-width: 767.98px) {
     .nav-btn {
         width: 38px;
         height: 38px;
         margin-right: 5px;
+    }
+
+    /* 优化搜索框在移动端的显示 */
+    .navbar .input-group {
+        max-width: calc(100vw - 180px);
     }
 }
 
@@ -560,4 +685,58 @@ tr:hover .action-icons {
     .sidebar-backdrop.show {
         display: block;
     }
+}
+
+/* 操作按钮下拉菜单 */
+.dropdown-menu {
+    min-width: 120px;
+    padding: 0.25rem 0;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    border-radius: 0.25rem;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.dropdown-item {
+    padding: 0.5rem 1rem;
+    display: flex;
+    align-items: center;
+    font-size: 0.875rem;
+}
+
+.dropdown-item i {
+    margin-right: 0.5rem;
+    width: 1rem;
+    text-align: center;
+}
+
+.dropdown-item:hover {
+    background-color: rgba(0, 0, 0, 0.05);
+}
+
+[data-bs-theme="dark"] .dropdown-menu {
+    background-color: #2c2c2c;
+    border-color: #444;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+}
+
+[data-bs-theme="dark"] .dropdown-item {
+    color: #e0e0e0;
+}
+
+[data-bs-theme="dark"] .dropdown-item:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: #fff;
+}
+
+.dropdown-toggle::after {
+    display: none;
+}
+
+.more-actions-btn {
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.25rem;
+}
+
+.more-actions-btn:focus {
+    box-shadow: none;
 }
