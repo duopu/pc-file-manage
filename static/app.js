@@ -156,11 +156,15 @@ document.addEventListener("DOMContentLoaded", () => {
   const pathContainer = document.querySelector('.path-navigation .d-flex');
   if (pathContainer) {
     pathContainer.addEventListener('scroll', () => {
+      // 检测滚动位置，显示左侧渐变指示器
       if (pathContainer.scrollLeft > 10) {
         pathContainer.classList.add('scrolled');
       } else {
         pathContainer.classList.remove('scrolled');
       }
+
+      // 检测是否有溢出
+      checkPathOverflow();
     });
   }
 
@@ -480,6 +484,9 @@ function handleWindowResize() {
       sidebar.style.left = "-100%";
     }
   }
+
+  // 检查路径导航溢出
+  checkPathOverflow();
 
   // 调整面包屑导航的可见性
   adjustBreadcrumbVisibility();
@@ -841,7 +848,7 @@ function createFileRow(file) {
     // 判断文件类型
     const ext = file.name.split(".").pop().toLowerCase();
     const imageExts = ["jpg", "jpeg", "png", "gif", "bmp", "svg", "webp"];
-    const videoExts = ["mp4", "webm", "ogg", "mov", "avi", "mkv", "flv"];
+    const videoExts = ["mp4", "webm", "ogg", "mov"];
 
     const isImage = imageExts.includes(ext);
     const isVideo = videoExts.includes(ext);
@@ -1102,78 +1109,114 @@ function getParentPath(path) {
 function updateBreadcrumb(path) {
   pathBreadcrumb.innerHTML = "";
 
-  // 处理路径分隔符为统一格式
-  path = path.replace(/\\/g, "/");
+  // 添加根目录项
+  const rootItem = document.createElement('li');
+  rootItem.className = 'breadcrumb-item';
+  const rootLink = document.createElement('a');
+  rootLink.href = '#';
+  rootLink.innerHTML = '<i class="bi bi-hdd"></i>';
+  rootLink.title = '根目录';
+  rootLink.addEventListener('click', (e) => {
+    e.preventDefault();
+    // 显示驱动器选择
+    loadDrives();
+  });
+  rootItem.appendChild(rootLink);
+  pathBreadcrumb.appendChild(rootItem);
 
-  // 分割路径
-  let parts = [];
-  if (/^[A-Z]:\/?.*/i.test(path)) {
-    // Windows 路径格式
-    const driveLetter = path.slice(0, 2);
-    parts.push(driveLetter);
+  // 如果是驱动器根目录，不添加其他项
+  if (!path || path === '/') {
+    const activeItem = document.createElement('li');
+    activeItem.className = 'breadcrumb-item active';
+    activeItem.textContent = '我的电脑';
+    pathBreadcrumb.appendChild(activeItem);
 
-    if (path.length > 2) {
-      // 添加剩余部分
-      const remainingPath = path.slice(3);
-      if (remainingPath) {
-        parts = parts.concat(remainingPath.split("/").filter(Boolean));
-      }
-    }
-  } else {
-    // 标准路径格式
-    parts = path.split("/").filter(Boolean);
-    if (parts.length === 0) {
-      parts.push("/");
-    }
+    // 检查溢出
+    setTimeout(checkPathOverflow, 10);
+    return;
   }
 
-  let currentPath = "";
+  // 解析路径组件
+  const isWindowsPath = /^[A-Z]:/i.test(path);
+  let components;
 
-  parts.forEach((part, index) => {
-    // 构建当前路径段
-    if (index === 0 && /^[A-Z]:$/i.test(part)) {
-      // 驱动器盘符
-      currentPath = part;
+  if (isWindowsPath) {
+    // 处理Windows路径
+    const driveLetter = path.substring(0, 2); // 例如 "C:"
+    const remainingPath = path.substring(2).replace(/\\/g, '/');
+    components = remainingPath.split('/').filter(Boolean);
+
+    // 添加驱动器盘符作为第一个组件
+    const driveItem = document.createElement('li');
+    driveItem.className = 'breadcrumb-item';
+    const driveLink = document.createElement('a');
+    driveLink.href = '#';
+    driveLink.textContent = driveLetter;
+    driveLink.addEventListener('click', (e) => {
+      e.preventDefault();
+      loadFolder(driveLetter);
+    });
+    driveItem.appendChild(driveLink);
+    pathBreadcrumb.appendChild(driveItem);
+  } else {
+    // 处理UNIX样式路径
+    components = path.split('/').filter(Boolean);
+  }
+
+  // 构建累积路径
+  let currentPath = isWindowsPath ? path.substring(0, 2) : '';
+
+  // 添加每个路径组件
+  components.forEach((component, index) => {
+    currentPath += (isWindowsPath && index === 0 ? '\\' : '/') + component;
+
+    const item = document.createElement('li');
+
+    if (index === components.length - 1) {
+      // 最后一个组件（当前目录）
+      item.className = 'breadcrumb-item active';
+      item.setAttribute('aria-current', 'page');
+      item.textContent = component;
     } else {
-      if (currentPath.endsWith(":")) {
-        currentPath += "/";
-      } else if (currentPath && !currentPath.endsWith("/")) {
-        currentPath += "/";
-      }
-      currentPath += part;
-    }
+      // 中间路径组件
+      item.className = 'breadcrumb-item';
+      const link = document.createElement('a');
+      link.href = '#';
+      link.textContent = component;
 
-    const li = document.createElement("li");
-    li.className = "breadcrumb-item";
-
-    if (index === parts.length - 1) {
-      li.classList.add("active");
-      li.textContent = part;
-    } else {
-      const a = document.createElement("a");
-      a.href = "#";
-      a.textContent = part;
-      a.dataset.path = currentPath;
-      a.addEventListener("click", (e) => {
+      // 使用闭包保存当前路径
+      const pathToNavigate = currentPath;
+      link.addEventListener('click', (e) => {
         e.preventDefault();
-        loadFolder(e.target.dataset.path);
+        loadFolder(pathToNavigate);
       });
-      li.appendChild(a);
+
+      item.appendChild(link);
     }
 
-    pathBreadcrumb.appendChild(li);
+    pathBreadcrumb.appendChild(item);
   });
 
-  // 滚动到最右侧，显示最新的路径部分
-  setTimeout(() => {
-    const container = pathBreadcrumb.parentElement.parentElement;
-    if (container) {
-      container.scrollLeft = container.scrollWidth;
-    }
-  }, 100);
+  // 检查溢出
+  setTimeout(checkPathOverflow, 10);
+}
 
-  // 调整面包屑导航的可见性
-  setTimeout(adjustBreadcrumbVisibility, 0);
+// 检查路径导航是否溢出并添加适当的类
+function checkPathOverflow() {
+  const pathContainer = document.querySelector('.path-navigation .d-flex');
+  const breadcrumb = document.getElementById('pathBreadcrumb');
+
+  if (pathContainer && breadcrumb) {
+    // 检查是否有水平溢出
+    const hasOverflow = breadcrumb.scrollWidth > pathContainer.clientWidth;
+
+    if (hasOverflow) {
+      pathContainer.classList.add('has-overflow');
+    } else {
+      pathContainer.classList.remove('has-overflow');
+      pathContainer.classList.remove('scrolled');
+    }
+  }
 }
 
 // 查看文件

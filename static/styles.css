@@ -341,17 +341,28 @@ body {
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none; /* Firefox */
     white-space: nowrap; /* 确保内容不换行 */
+    padding-bottom: 5px; /* 添加底部内边距，避免部分浏览器显示滚动条 */
+    margin-bottom: -5px; /* 抵消添加的内边距 */
 }
 
 .path-navigation .d-flex::-webkit-scrollbar {
     display: none; /* Chrome, Safari, Edge */
+    height: 0; /* 确保滚动条高度为0 */
 }
 
 .path-breadcrumb {
     white-space: nowrap;
-    flex-wrap: nowrap;
+    flex-wrap: nowrap !important; /* 强制不换行 */
     margin-bottom: 0;
     padding-bottom: 0;
+    display: inline-flex; /* 使用inline-flex确保元素在一行 */
+    width: auto; /* 允许宽度自动扩展 */
+}
+
+.breadcrumb-item {
+    float: none; /* 防止浮动导致的布局问题 */
+    display: inline-flex; /* 确保每个项目都在同一行 */
+    align-items: center;
 }
 
 /* 路径导航溢出指示 */
@@ -364,6 +375,7 @@ body {
     width: 30px;
     background: linear-gradient(to right, rgba(248, 249, 250, 0), rgba(248, 249, 250, 1));
     pointer-events: none;
+    z-index: 5; /* 确保在内容之上 */
 }
 
 .path-navigation .has-overflow::before {
@@ -375,7 +387,7 @@ body {
     width: 30px;
     background: linear-gradient(to left, rgba(248, 249, 250, 0), rgba(248, 249, 250, 1));
     pointer-events: none;
-    z-index: 1;
+    z-index: 5; /* 确保在内容之上 */
     opacity: 0;
     transition: opacity 0.3s;
 }
