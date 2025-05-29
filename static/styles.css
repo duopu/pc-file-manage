@@ -181,6 +181,29 @@ body {
         padding: 10px 20px;
         top: 45%;
     }
+
+    /* 优化路径导航在移动端的显示 */
+    .path-navigation {
+        padding: 0.5rem 1rem;
+    }
+
+    .path-navigation .d-flex {
+        margin-right: 0;
+    }
+
+    #statusInfo {
+        min-width: 70px;
+        font-size: 0.75rem;
+    }
+
+    .breadcrumb-item {
+        font-size: 0.85rem;
+    }
+
+    /* 调整主内容区域，为底部导航腾出空间 */
+    .main-content {
+        padding-bottom: 45px !important;
+    }
 }
 
 /* Bootstrap Icons 字体文件路径 */
@@ -309,6 +332,7 @@ body {
 .path-navigation {
     position: relative;
     overflow: hidden;
+    flex-shrink: 0; /* 防止路径栏被压缩 */
 }
 
 .path-navigation .d-flex {
@@ -316,6 +340,7 @@ body {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none; /* Firefox */
+    white-space: nowrap; /* 确保内容不换行 */
 }
 
 .path-navigation .d-flex::-webkit-scrollbar {
@@ -781,15 +806,9 @@ tr:hover .action-icons {
     z-index: 10;
 }
 
-/* 移动设备上的文件列表容器调整 */
-@media (max-width: 767.98px) {
-    .main-content {
-        padding-bottom: 45px !important; /* 为底部导航栏留出空间 */
-    }
-
-    #fileListContainer {
-        margin-bottom: 0;
-    }
+/* 移除底部多余留白 */
+.bg-light.p-2.border-top {
+    display: none !important; /* 完全移除底部状态栏 */
 }
 
 /* 主体内容区样式 */
