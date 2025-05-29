@@ -12,6 +12,10 @@ let imageLoadingInProgress = false;
 let lastTapTime = 0;
 let touchTimer = null;
 
+// 添加导航历史相关变量
+let navigationHistory = [];
+let currentHistoryIndex = -1;
+
 // DOM 元素
 const fileList = document.getElementById("fileList");
 const fileTable = document.getElementById("fileTable");
@@ -39,6 +43,11 @@ const previewVideo = document.getElementById("previewVideo");
 const audioPlayer = document.getElementById("audioPlayer");
 const previewAudio = document.getElementById("previewAudio");
 const unsupportedFileViewer = document.getElementById("unsupportedFileViewer");
+
+// 导航按钮元素
+const goBackBtn = document.getElementById("goBackBtn");
+const goForwardBtn = document.getElementById("goForwardBtn");
+const goUpBtn = document.getElementById("goUpBtn");
 
 // 新增的删除确认和提示元素
 const deleteConfirmModal = new bootstrap.Modal(document.getElementById('deleteConfirmModal'));
@@ -74,6 +83,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // 绑定事件监听器
   bindEventListeners();
+
+  // 绑定导航按钮事件
+  bindNavigationButtons();
 
   // 绑定媒体预览关闭按钮事件
   mediaCloseBtn.addEventListener("click", closeMediaPreview);
@@ -126,6 +138,184 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 });
+
+// 绑定导航按钮事件
+function bindNavigationButtons() {
+  if (goBackBtn) {
+    goBackBtn.addEventListener("click", navigateBack);
+    goBackBtn.classList.add("disabled"); // 初始状态禁用
+  }
+
+  if (goForwardBtn) {
+    goForwardBtn.addEventListener("click", navigateForward);
+    goForwardBtn.classList.add("disabled"); // 初始状态禁用
+  }
+
+  if (goUpBtn) {
+    goUpBtn.addEventListener("click", navigateUp);
+  }
+}
+
+// 导航到上一页
+function navigateBack() {
+  if (currentHistoryIndex > 0) {
+    currentHistoryIndex--;
+    const previousPath = navigationHistory[currentHistoryIndex];
+    loadFolderWithoutHistory(previousPath);
+    updateNavigationButtons();
+  }
+}
+
+// 导航到下一页
+function navigateForward() {
+  if (currentHistoryIndex < navigationHistory.length - 1) {
+    currentHistoryIndex++;
+    const nextPath = navigationHistory[currentHistoryIndex];
+    loadFolderWithoutHistory(nextPath);
+    updateNavigationButtons();
+  }
+}
+
+// 导航到上一级目录
+function navigateUp() {
+  if (currentPath && currentPath.length > 3) { // 不是根目录
+    const parentPath = getParentPath(currentPath);
+    loadFolder(parentPath);
+  }
+}
+
+// 更新导航按钮状态
+function updateNavigationButtons() {
+  if (goBackBtn) {
+    if (currentHistoryIndex > 0) {
+      goBackBtn.classList.remove("disabled");
+    } else {
+      goBackBtn.classList.add("disabled");
+    }
+  }
+
+  if (goForwardBtn) {
+    if (currentHistoryIndex < navigationHistory.length - 1) {
+      goForwardBtn.classList.remove("disabled");
+    } else {
+      goForwardBtn.classList.add("disabled");
+    }
+  }
+}
+
+// 添加路径到历史记录
+function addToHistory(path) {
+  // 如果当前不是在历史记录的最后，则移除当前位置之后的所有记录
+  if (currentHistoryIndex < navigationHistory.length - 1) {
+    navigationHistory = navigationHistory.slice(0, currentHistoryIndex + 1);
+  }
+
+  // 添加新路径到历史记录
+  navigationHistory.push(path);
+  currentHistoryIndex = navigationHistory.length - 1;
+
+  // 更新导航按钮状态
+  updateNavigationButtons();
+}
+
+// 不添加历史记录的加载文件夹
+function loadFolderWithoutHistory(path) {
+  try {
+    // 显示加载指示器
+    fileTable.style.display = "none";
+    loadingIndicator.style.display = "flex";
+
+    // 发送请求获取文件夹内容
+    fetch(`/api/folder?path=${encodeURIComponent(path)}`)
+      .then(response => {
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+      })
+      .then(data => {
+        // 更新当前路径
+        currentPath = path;
+        updatePathDisplay(currentPath);
+
+        // 清空文件列表
+        fileList.innerHTML = "";
+
+        // 如果不是根驱动器，添加"返回上一级"项
+        if (path.length > 3) {
+          // 例如 "C:/" 长度为3
+          const parentPath = getParentPath(path);
+          const parentRow = createFileRow({
+            name: "..",
+            path: parentPath,
+            isDirectory: true,
+            size: 0,
+            modifiedTime: new Date(),
+            isParent: true,
+          });
+          fileList.appendChild(parentRow);
+        }
+
+        // 排序文件列表：文件夹在前，文件在后，按字母顺序排序
+        const sortedFiles = data.files.sort((a, b) => {
+          if (a.isDirectory && !b.isDirectory) return -1;
+          if (!a.isDirectory && b.isDirectory) return 1;
+          return a.name.localeCompare(b.name);
+        });
+
+        // 添加文件和文件夹到列表
+        sortedFiles.forEach((file) => {
+          const row = createFileRow(file);
+          fileList.appendChild(row);
+        });
+
+        // 更新状态信息
+        statusInfo.textContent = `${data.files.length} 个项目`;
+
+        // 隐藏加载指示器，显示文件表格
+        loadingIndicator.style.display = "none";
+        fileTable.style.display = "table";
+      })
+      .catch(error => {
+        console.error("加载文件夹失败:", error);
+
+        // 显示友好的错误信息
+        fileList.innerHTML = "";
+        const errorRow = document.createElement("tr");
+        const errorCell = document.createElement("td");
+        errorCell.colSpan = 5;
+        errorCell.className = "text-center p-5 text-danger";
+        errorCell.innerHTML = `
+          <i class="bi bi-exclamation-circle fs-1 d-block mb-3"></i>
+          <h5>访问文件夹失败</h5>
+          <p>${error.message}</p>
+          <p class="text-muted small">这可能是由于权限不足或路径不存在</p>
+          <button class="btn btn-outline-primary mt-2" id="backBtn">
+              <i class="bi bi-arrow-left"></i> 返回上一级
+          </button>
+        `;
+        errorRow.appendChild(errorCell);
+        fileList.appendChild(errorRow);
+
+        // 添加返回按钮事件
+        document.getElementById("backBtn").addEventListener("click", () => {
+          // 尝试返回上一级，如果是根目录则加载驱动器列表
+          if (path.length > 3) {
+            loadFolder(getParentPath(path));
+          } else {
+            // 如果是根目录，尝试重新加载驱动器
+            loadDrives();
+          }
+        });
+
+        // 隐藏加载指示器，显示文件表格
+        loadingIndicator.style.display = "none";
+        fileTable.style.display = "table";
+      });
+  } catch (error) {
+    console.error("加载文件夹失败:", error);
+  }
+}
 
 // 创建侧边栏背景遮罩
 function createSidebarBackdrop() {
@@ -368,6 +558,9 @@ async function loadFolder(path) {
     }
 
     const data = await response.json();
+
+    // 添加到历史记录
+    addToHistory(path);
 
     // 更新当前路径
     currentPath = path;

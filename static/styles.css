@@ -4,6 +4,51 @@ body {
     overflow: hidden;
 }
 
+/* 导航按钮样式 */
+.navigation-buttons {
+    display: flex;
+    align-items: center;
+}
+
+.nav-btn {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    padding: 0;
+    border: none;
+    background-color: rgba(255, 255, 255, 0.1);
+    transition: background-color 0.2s;
+}
+
+.nav-btn:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+}
+
+.nav-btn:active {
+    background-color: rgba(255, 255, 255, 0.3);
+}
+
+.nav-btn i {
+    font-size: 1.2rem;
+}
+
+.nav-btn.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* 移动端导航按钮优化 */
+@media (max-width: 767.98px) {
+    .nav-btn {
+        width: 38px;
+        height: 38px;
+        margin-right: 5px;
+    }
+}
+
 /* Bootstrap Icons 字体文件路径 */
 @font-face {
     font-family: "bootstrap-icons";

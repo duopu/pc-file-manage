@@ -13,9 +13,18 @@
       <!-- 导航栏 -->
       <nav class="navbar navbar-expand-lg navbar-dark bg-primary w-100">
         <div class="container-fluid">
-          <a class="navbar-brand" href="#">
-            <i class="bi bi-folder"></i> 文件管理系统
-          </a>
+          <div class="d-flex align-items-center navigation-buttons">
+            <button id="goBackBtn" class="btn btn-primary nav-btn me-1" title="后退">
+              <i class="bi bi-arrow-left"></i>
+            </button>
+            <button id="goForwardBtn" class="btn btn-primary nav-btn me-1" title="前进">
+              <i class="bi bi-arrow-right"></i>
+            </button>
+            <button id="goUpBtn" class="btn btn-primary nav-btn" title="上一级目录">
+              <i class="bi bi-arrow-up"></i>
+            </button>
+          </div>
+
           <!-- 移动端菜单按钮 -->
           <button
             class="navbar-toggler"
