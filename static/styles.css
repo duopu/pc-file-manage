@@ -749,3 +749,48 @@ tr:hover .action-icons {
 .more-actions-btn:focus {
     box-shadow: none;
 }
+
+/* 文件列表容器样式 */
+#fileListContainer {
+    flex: 1 1 auto;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    min-height: 0; /* 重要：确保flex子元素可以正确滚动 */
+}
+
+.table-responsive {
+    flex: 1 1 auto;
+    overflow-y: auto;
+    min-height: 0; /* 重要：确保flex子元素可以正确滚动 */
+    -webkit-overflow-scrolling: touch; /* 提升iOS滚动体验 */
+}
+
+#fileTable {
+    margin-bottom: 0;
+}
+
+#fileTable thead {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+/* 移动设备上的文件列表容器调整 */
+@media (max-width: 767.98px) {
+    .main-content {
+        padding-bottom: 45px !important; /* 为底部导航栏留出空间 */
+    }
+
+    #fileListContainer {
+        margin-bottom: 0;
+    }
+}
+
+/* 主体内容区样式 */
+.main-content {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    overflow: hidden;
+}
