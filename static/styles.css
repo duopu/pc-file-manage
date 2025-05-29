@@ -1,0 +1,464 @@
+/* 全局样式 */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    overflow: hidden;
+}
+
+/* Bootstrap Icons 字体文件路径 */
+@font-face {
+    font-family: "bootstrap-icons";
+    src: url("lib/bootstrap-icons/fonts/bootstrap-icons.woff2") format("woff2"),
+         url("lib/bootstrap-icons/fonts/bootstrap-icons.woff") format("woff");
+}
+
+/* 复制成功提示样式 */
+.toast-notification {
+    position: fixed;
+    bottom: 70px;
+    left: 50%;
+    transform: translateX(-50%) translateY(100%);
+    background-color: rgba(0, 0, 0, 0.7);
+    color: white;
+    padding: 8px 16px;
+    border-radius: 4px;
+    z-index: 2000;
+    opacity: 0;
+    transition: transform 0.3s, opacity 0.3s;
+}
+
+.toast-notification.show {
+    transform: translateX(-50%) translateY(0);
+    opacity: 1;
+}
+
+/* 文件图标样式 */
+.file-icon {
+    font-size: 1.2rem;
+    width: 1.5rem;
+    text-align: center;
+}
+
+/* 文件夹图标颜色 */
+.folder-icon {
+    color: #ffc107;
+}
+
+/* 文件图标颜色 */
+.text-file-icon {
+    color: #6c757d;
+}
+
+.image-file-icon {
+    color: #28a745;
+}
+
+.video-file-icon {
+    color: #dc3545;
+}
+
+.audio-file-icon {
+    color: #17a2b8;
+}
+
+.archive-file-icon {
+    color: #fd7e14;
+}
+
+.code-file-icon {
+    color: #007bff;
+}
+
+.pdf-file-icon {
+    color: #e83e8c;
+}
+
+/* 侧边栏样式 */
+.shortcut-list .list-group-item,
+.recent-list .list-group-item {
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.shortcut-list .list-group-item:hover,
+.recent-list .list-group-item:hover {
+    background-color: #f8f9fa;
+}
+
+/* 文件列表行样式 */
+#fileList tr {
+    cursor: pointer;
+}
+
+/* 文件操作按钮 */
+.file-action-btn {
+    opacity: 0.7;
+    transition: opacity 0.2s;
+}
+
+.file-action-btn:hover {
+    opacity: 1;
+}
+
+/* 面包屑导航样式 */
+.breadcrumb-item a {
+    text-decoration: none;
+    color: #0d6efd;
+}
+
+.breadcrumb-item.active {
+    font-weight: 500;
+}
+
+/* 面包屑导航滚动 */
+.breadcrumb-scroll {
+    white-space: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none; /* Firefox */
+}
+
+.breadcrumb-scroll::-webkit-scrollbar {
+    display: none; /* Chrome, Safari, Edge */
+}
+
+/* 文件内容查看器 */
+#fileContentViewer {
+    max-height: 70vh;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    overflow-x: auto;
+}
+
+/* 媒体预览容器 */
+.file-content-container {
+    min-height: 70vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+/* 图片预览 */
+#imageViewer {
+    height: 70vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: auto;
+    position: relative;
+}
+
+#previewImage {
+    max-height: 100%;
+    max-width: 100%;
+    object-fit: contain;
+    transition: opacity 0.3s ease;
+}
+
+/* 图片加载动画 */
+.image-loading {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(255, 255, 255, 0.8);
+    z-index: 1;
+}
+
+/* 视频预览 */
+#videoPlayer {
+    height: 70vh;
+}
+
+#previewVideo {
+    max-height: 100%;
+    object-fit: contain;
+}
+
+/* 音频预览 */
+#audioPlayer {
+    height: 70vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+/* 全屏模式 */
+.fullscreen-mode {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 2000;
+    background-color: #000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.fullscreen-mode #previewImage,
+.fullscreen-mode #previewVideo {
+    max-height: 100vh;
+    max-width: 100vw;
+}
+
+.fullscreen-mode .fullscreen-controls {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    z-index: 2001;
+}
+
+.fullscreen-mode .fullscreen-controls button {
+    background-color: rgba(0, 0, 0, 0.5);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 5px 10px;
+}
+
+/* 加载指示器 */
+#loadingIndicator {
+    min-height: 200px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* 悬停效果 */
+.action-icons {
+    visibility: hidden;
+}
+
+tr:hover .action-icons {
+    visibility: visible;
+}
+
+/* 状态栏 */
+#statusInfo, #currentPath {
+    font-size: 0.9rem;
+    color: #6c757d;
+}
+
+/* 搜索结果高亮 */
+.search-highlight {
+    background-color: #fff3cd;
+    padding: 2px;
+    border-radius: 3px;
+}
+
+/* 响应式侧边栏 */
+@media (max-width: 767.98px) {
+    .sidebar {
+        position: fixed;
+        top: 56px;
+        left: -100%;
+        width: 50%;
+        height: calc(100% - 116px) !important; /* 减去顶部导航栏和底部导航栏的高度 */
+        z-index: 1030;
+        transition: left 0.3s ease;
+        box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+        overflow-y: auto;
+    }
+
+    .sidebar.show {
+        left: 0;
+    }
+
+    /* 确保侧边栏内容可滚动 */
+    .sidebar-content {
+        height: calc(100% - 150px);
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .main-content {
+        width: 100%;
+        flex: 0 0 100%;
+        max-width: 100%;
+    }
+
+    /* 文件操作按钮在移动端始终可见 */
+    .action-icons {
+        visibility: visible;
+    }
+}
+
+/* 文件列表在移动设备上的优化 */
+@media (max-width: 767.98px) {
+    .table th, .table td {
+        padding: 0.5rem;
+    }
+
+    #fileList .file-action-btn {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.75rem;
+    }
+
+    /* 文件名在移动设备上的最大宽度 */
+    #fileList td:nth-child(2) {
+        max-width: 150px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+}
+
+/* 全屏媒体预览 */
+.media-preview-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.9);
+    z-index: 2000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.media-preview-content {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.media-close-btn {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background: transparent;
+    border: none;
+    color: white;
+    font-size: 2rem;
+    cursor: pointer;
+    z-index: 2001;
+    opacity: 0.7;
+    transition: opacity 0.2s;
+}
+
+.media-close-btn:hover {
+    opacity: 1;
+}
+
+#fullscreenImageViewer,
+#fullscreenVideoViewer {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#fullscreenImage {
+    max-width: 95%;
+    max-height: 95%;
+    object-fit: contain;
+}
+
+#fullscreenVideo {
+    max-width: 95%;
+    max-height: 95%;
+    object-fit: contain;
+}
+
+/* 移动设备上的媒体预览优化 */
+@media (max-width: 767.98px) {
+    .media-close-btn {
+        top: 10px;
+        right: 10px;
+        font-size: 1.5rem;
+    }
+
+    #fullscreenImage,
+    #fullscreenVideo {
+        max-width: 100%;
+        max-height: 100%;
+    }
+}
+
+/* 移动端底部导航栏 */
+.mobile-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 60px;
+    background-color: #fff;
+    border-top: 1px solid #dee2e6;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    z-index: 1020;
+    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.mobile-nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 5px 0;
+    width: 33.33%;
+    cursor: pointer;
+    color: #6c757d;
+    transition: color 0.2s;
+}
+
+.mobile-nav-item:hover,
+.mobile-nav-item:active {
+    color: #0d6efd;
+}
+
+.mobile-nav-item i {
+    font-size: 1.5rem;
+    margin-bottom: 2px;
+}
+
+.mobile-nav-item span {
+    font-size: 0.75rem;
+}
+
+/* 调整主内容区域，为底部导航腾出空间 */
+@media (max-width: 767.98px) {
+    .main-content {
+        padding-bottom: 60px !important;
+    }
+
+    /* 修复侧边栏在移动端的高度 */
+    .sidebar {
+        height: calc(100% - 116px) !important; /* 减去顶部导航栏和底部导航栏的高度 */
+        top: 56px;
+        z-index: 1030;
+    }
+
+    /* 确保侧边栏在移动端显示时有足够的可见度 */
+    .sidebar.show {
+        box-shadow: 0 0 15px rgba(0, 0, 0, 0.3);
+    }
+
+    /* 添加侧边栏显示时的遮罩层 */
+    .sidebar-backdrop {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: rgba(0, 0, 0, 0.5);
+        z-index: 1025;
+        display: none;
+    }
+
+    .sidebar-backdrop.show {
+        display: block;
+    }
+}

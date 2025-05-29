@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>文件管理系统</title>
+    <link
+      rel="stylesheet"
+      href="lib/bootstrap/bootstrap.min.css"
+    />
+    <link
+      rel="stylesheet"
+      href="lib/bootstrap-icons/bootstrap-icons.min.css"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="container-fluid vh-100 d-flex flex-column">
+      <!-- 导航栏 -->
+      <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container-fluid">
+          <a class="navbar-brand" href="#">
+            <i class="bi bi-folder"></i> 文件管理系统
+          </a>
+          <!-- 移动端菜单按钮 -->
+          <button
+            class="navbar-toggler"
+            type="button"
+            data-bs-toggle="collapse"
+            data-bs-target="#navbarContent"
+            aria-controls="navbarContent"
+            aria-expanded="false"
+            aria-label="切换导航"
+          >
+            <span class="navbar-toggler-icon"></span>
+          </button>
+
+          <!-- 导航内容 -->
+          <div class="collapse navbar-collapse" id="navbarContent">
+            <!-- 搜索框 -->
+            <div class="ms-auto d-flex mt-2 mt-lg-0">
+              <div class="input-group">
+                <input
+                  type="text"
+                  id="searchInput"
+                  class="form-control"
+                  placeholder="搜索文件..."
+                  aria-label="搜索文件"
+                />
+                <button class="btn btn-light" type="button" id="searchBtn">
+                  <i class="bi bi-search"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </nav>
+
+      <!-- 主体内容 -->
+      <div class="row flex-grow-1 overflow-hidden">
+        <!-- 侧边栏 - 在移动设备上可折叠 -->
+        <div class="col-md-2 bg-light p-0 border-end sidebar" id="sidebar">
+          <!-- 移动端侧边栏标题 -->
+          <div class="d-md-none p-3 bg-primary text-white">
+            <h5 class="m-0"><i class="bi bi-folder me-2"></i> 文件管理系统</h5>
+          </div>
+
+          <div class="sidebar-content overflow-auto">
+            <div class="p-3">
+              <h5>磁盘驱动器</h5>
+              <ul class="list-group drives-list" id="drivesList">
+                <!-- 磁盘驱动器将通过JS动态添加 -->
+                <li class="list-group-item text-center text-muted">
+                  <div class="spinner-border spinner-border-sm" role="status">
+                    <span class="visually-hidden">加载中...</span>
+                  </div>
+                  加载中...
+                </li>
+              </ul>
+            </div>
+            <div class="p-3">
+              <h5>快捷导航</h5>
+              <ul class="list-group shortcut-list">
+                <li
+                  class="list-group-item list-group-item-action d-flex align-items-center"
+                  data-path="C:/Users"
+                >
+                  <i class="bi bi-person-circle me-2"></i> 用户文件夹
+                </li>
+                <li
+                  class="list-group-item list-group-item-action d-flex align-items-center"
+                  data-path="C:/Users/jiang/Desktop"
+                >
+                  <i class="bi bi-display me-2"></i> 桌面
+                </li>
+                <li
+                  class="list-group-item list-group-item-action d-flex align-items-center"
+                  data-path="C:/Users/jiang/Documents"
+                >
+                  <i class="bi bi-file-earmark me-2"></i> 文档
+                </li>
+                <li
+                  class="list-group-item list-group-item-action d-flex align-items-center"
+                  data-path="C:/Users/jiang/Downloads"
+                >
+                  <i class="bi bi-download me-2"></i> 下载
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <!-- 主要内容区 -->
+        <div
+          class="col-md-10 p-0 d-flex flex-column main-content"
+          id="mainContent"
+        >
+          <!-- 路径导航 -->
+          <div class="bg-light p-2 border-bottom">
+            <nav aria-label="breadcrumb">
+              <ol class="breadcrumb m-0 breadcrumb-scroll" id="pathBreadcrumb">
+                <!-- 路径导航将通过JS动态添加 -->
+              </ol>
+            </nav>
+          </div>
+
+          <!-- 文件列表 -->
+          <div class="flex-grow-1 p-0 overflow-auto" id="fileListContainer">
+            <div class="p-3" id="loadingIndicator">
+              <div class="d-flex justify-content-center">
+                <div class="spinner-border text-primary" role="status">
+                  <span class="visually-hidden">加载中...</span>
+                </div>
+              </div>
+            </div>
+            <div class="table-responsive">
+              <table class="table table-hover mb-0" id="fileTable">
+                <thead class="sticky-top bg-white">
+                  <tr>
+                    <th style="width: 40px"></th>
+                    <th>名称</th>
+                    <th class="d-none d-md-table-cell">大小</th>
+                    <th class="d-none d-md-table-cell">修改日期</th>
+                    <th style="width: 100px">操作</th>
+                  </tr>
+                </thead>
+                <tbody id="fileList">
+                  <!-- 文件列表将通过JS动态添加 -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- 状态栏 -->
+          <div
+            class="bg-light p-2 border-top d-flex justify-content-between flex-wrap"
+          >
+            <div id="statusInfo" class="small">0 个项目</div>
+            <div id="currentPath" class="small text-truncate">当前路径: C:</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 查看文件内容的模态框 -->
+    <div
+      class="modal fade"
+      id="fileContentModal"
+      tabindex="-1"
+      aria-labelledby="fileContentModalLabel"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-xl modal-dialog-scrollable">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="fileContentModalLabel">文件内容</h5>
+            <div class="ms-auto">
+              <button
+                type="button"
+                class="btn-close"
+                data-bs-dismiss="modal"
+                aria-label="Close"
+              ></button>
+            </div>
+          </div>
+          <div class="modal-body p-0">
+            <div class="container-fluid p-0 file-content-container">
+              <!-- 文本内容查看器 -->
+              <pre
+                id="fileContentViewer"
+                class="p-3 border rounded bg-light"
+              ></pre>
+
+              <!-- 图片查看器 -->
+              <div id="imageViewer" class="text-center d-none p-2">
+                <img
+                  src=""
+                  class="img-fluid"
+                  alt="图片预览"
+                  id="previewImage"
+                />
+              </div>
+
+              <!-- 视频播放器 -->
+              <div id="videoPlayer" class="text-center d-none">
+                <video controls class="w-100 h-100" id="previewVideo">
+                  您的浏览器不支持HTML5视频播放
+                </video>
+              </div>
+
+              <!-- 音频播放器 -->
+              <div id="audioPlayer" class="text-center p-3 d-none">
+                <audio controls class="w-100" id="previewAudio">
+                  您的浏览器不支持HTML5音频播放
+                </audio>
+                <div class="mt-3">
+                  <i class="bi bi-music-note-beamed fs-1 text-primary"></i>
+                </div>
+              </div>
+
+              <!-- 不支持预览的提示 -->
+              <div id="unsupportedFileViewer" class="text-center p-5 d-none">
+                <i class="bi bi-file-earmark fs-1 mb-3"></i>
+                <h5>无法预览此类型文件</h5>
+                <p class="text-muted">请点击下方按钮下载文件后查看</p>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              data-bs-dismiss="modal"
+            >
+              关闭
+            </button>
+            <a href="#" id="downloadFileBtn" class="btn btn-primary"
+              >下载文件</a
+            >
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 媒体文件全屏预览 -->
+    <div id="mediaPreviewOverlay" class="media-preview-overlay d-none">
+      <div class="media-preview-content">
+        <!-- 关闭按钮 -->
+        <button type="button" class="media-close-btn" id="mediaCloseBtn">
+          <i class="bi bi-x-lg"></i>
+        </button>
+
+        <!-- 图片预览 -->
+        <div id="fullscreenImageViewer" class="d-none">
+          <img src="" id="fullscreenImage" alt="图片预览" />
+        </div>
+
+        <!-- 视频预览 -->
+        <div id="fullscreenVideoViewer" class="d-none">
+          <video controls id="fullscreenVideo">
+            您的浏览器不支持HTML5视频播放
+          </video>
+        </div>
+      </div>
+    </div>
+
+    <!-- 重命名文件的模态框 -->
+    <div
+      class="modal fade"
+      id="renameModal"
+      tabindex="-1"
+      aria-labelledby="renameModalLabel"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="renameModalLabel">重命名文件</h5>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            ></button>
+          </div>
+          <div class="modal-body">
+            <form id="renameForm">
+              <div class="mb-3">
+                <label for="newFilename" class="form-label">新文件名</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  id="newFilename"
+                  required
+                />
+                <input type="hidden" id="oldFilePath" />
+              </div>
+            </form>
+          </div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              data-bs-dismiss="modal"
+            >
+              取消
+            </button>
+            <button type="button" class="btn btn-primary" id="confirmRenameBtn">
+              确认
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 移动端底部导航栏 -->
+    <div class="mobile-nav d-md-none" id="mobileNav">
+      <div class="mobile-nav-item" id="showSidebarBtn">
+        <i class="bi bi-list"></i>
+        <span>导航</span>
+      </div>
+      <div class="mobile-nav-item" id="homeBtn">
+        <i class="bi bi-house"></i>
+        <span>首页</span>
+      </div>
+      <div class="mobile-nav-item" id="searchMobileBtn">
+        <i class="bi bi-search"></i>
+        <span>搜索</span>
+      </div>
+    </div>
+
+    <script src="lib/bootstrap/bootstrap.bundle.min.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>
