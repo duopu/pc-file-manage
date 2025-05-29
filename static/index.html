@@ -11,7 +11,7 @@
   <body>
     <div class="container-fluid vh-100 d-flex flex-column">
       <!-- 导航栏 -->
-      <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+      <nav class="navbar navbar-expand-lg navbar-dark bg-primary w-100">
         <div class="container-fluid">
           <a class="navbar-brand" href="#">
             <i class="bi bi-folder"></i> 文件管理系统
@@ -109,13 +109,16 @@
           class="col-md-10 p-0 d-flex flex-column main-content"
           id="mainContent"
         >
-          <!-- 路径导航 -->
-          <div class="bg-light p-2 border-bottom">
-            <nav aria-label="breadcrumb">
-              <ol class="breadcrumb m-0 breadcrumb-scroll" id="pathBreadcrumb">
-                <!-- 路径导航将通过JS动态添加 -->
-              </ol>
-            </nav>
+          <!-- 合并的路径导航 -->
+          <div class="bg-light p-2 border-bottom path-navigation">
+            <div class="d-flex align-items-center overflow-auto">
+              <div id="statusInfo" class="small me-2">0 个项目</div>
+              <nav aria-label="breadcrumb" class="flex-grow-1">
+                <ol class="breadcrumb m-0 path-breadcrumb" id="pathBreadcrumb">
+                  <!-- 路径导航将通过JS动态添加 -->
+                </ol>
+              </nav>
+            </div>
           </div>
 
           <!-- 文件列表 -->
@@ -145,12 +148,9 @@
             </div>
           </div>
 
-          <!-- 状态栏 -->
-          <div
-            class="bg-light p-2 border-top d-flex justify-content-between flex-wrap"
-          >
-            <div id="statusInfo" class="small">0 个项目</div>
-            <div id="currentPath" class="small text-truncate">当前路径: C:</div>
+          <!-- 状态栏 - 已移除内容 -->
+          <div class="bg-light p-2 border-top d-flex justify-content-between flex-wrap">
+            <!-- 状态信息已移到路径导航中 -->
           </div>
         </div>
       </div>

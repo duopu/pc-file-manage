@@ -121,6 +121,60 @@ body {
     display: none; /* Chrome, Safari, Edge */
 }
 
+/* 新增的路径导航样式 */
+.path-navigation {
+    position: relative;
+    overflow: hidden;
+}
+
+.path-navigation .d-flex {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none; /* Firefox */
+}
+
+.path-navigation .d-flex::-webkit-scrollbar {
+    display: none; /* Chrome, Safari, Edge */
+}
+
+.path-breadcrumb {
+    white-space: nowrap;
+    flex-wrap: nowrap;
+    margin-bottom: 0;
+    padding-bottom: 0;
+}
+
+/* 路径导航溢出指示 */
+.path-navigation .has-overflow::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    height: 100%;
+    width: 30px;
+    background: linear-gradient(to right, rgba(248, 249, 250, 0), rgba(248, 249, 250, 1));
+    pointer-events: none;
+}
+
+.path-navigation .has-overflow::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 30px;
+    background: linear-gradient(to left, rgba(248, 249, 250, 0), rgba(248, 249, 250, 1));
+    pointer-events: none;
+    z-index: 1;
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+
+.path-navigation .has-overflow.scrolled::before {
+    opacity: 1;
+}
+
 /* 文件内容查看器 */
 #fileContentViewer {
     max-height: 70vh;
@@ -392,7 +446,7 @@ tr:hover .action-icons {
     bottom: 0;
     left: 0;
     right: 0;
-    height: 60px;
+    height: 45px;
     background-color: #fff;
     border-top: 1px solid #dee2e6;
     display: flex;
@@ -407,7 +461,7 @@ tr:hover .action-icons {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 5px 0;
+    padding: 2px 0;
     width: 33.33%;
     cursor: pointer;
     color: #6c757d;
@@ -420,23 +474,23 @@ tr:hover .action-icons {
 }
 
 .mobile-nav-item i {
-    font-size: 1.5rem;
-    margin-bottom: 2px;
+    font-size: 1.2rem;
+    margin-bottom: 1px;
 }
 
 .mobile-nav-item span {
-    font-size: 0.75rem;
+    font-size: 0.7rem;
 }
 
 /* 调整主内容区域，为底部导航腾出空间 */
 @media (max-width: 767.98px) {
     .main-content {
-        padding-bottom: 60px !important;
+        padding-bottom: 45px !important;
     }
 
     /* 修复侧边栏在移动端的高度 */
     .sidebar {
-        height: calc(100% - 116px) !important; /* 减去顶部导航栏和底部导航栏的高度 */
+        height: calc(100% - 101px) !important; /* 减去顶部导航栏和底部导航栏的高度 */
         top: 56px;
         z-index: 1030;
     }

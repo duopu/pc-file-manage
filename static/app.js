@@ -113,6 +113,18 @@ document.addEventListener("DOMContentLoaded", () => {
       deleteConfirmModal.hide();
     }
   });
+
+  // 监听路径导航滚动事件
+  const pathContainer = document.querySelector('.path-navigation .d-flex');
+  if (pathContainer) {
+    pathContainer.addEventListener('scroll', () => {
+      if (pathContainer.scrollLeft > 10) {
+        pathContainer.classList.add('scrolled');
+      } else {
+        pathContainer.classList.remove('scrolled');
+      }
+    });
+  }
 });
 
 // 创建侧边栏背景遮罩
@@ -189,10 +201,12 @@ function handleWindowResize() {
 // 调整面包屑导航的可见性
 function adjustBreadcrumbVisibility() {
   // 确保面包屑导航在移动设备上可以滚动查看
-  if (pathBreadcrumb.scrollWidth > pathBreadcrumb.clientWidth) {
-    pathBreadcrumb.classList.add("has-overflow");
-  } else {
-    pathBreadcrumb.classList.remove("has-overflow");
+  const container = pathBreadcrumb.parentElement.parentElement;
+
+  if (container && pathBreadcrumb.scrollWidth > container.clientWidth) {
+    container.classList.add('has-overflow');
+  } else if (container) {
+    container.classList.remove('has-overflow');
   }
 }
 
@@ -292,7 +306,7 @@ async function loadDrives() {
 
 // 更新路径显示
 function updatePathDisplay(path) {
-  currentPathDisplay.textContent = `当前路径: ${path}`;
+  // 只更新面包屑导航
   updateBreadcrumb(path);
 }
 
@@ -784,6 +798,14 @@ function updateBreadcrumb(path) {
 
     pathBreadcrumb.appendChild(li);
   });
+
+  // 滚动到最右侧，显示最新的路径部分
+  setTimeout(() => {
+    const container = pathBreadcrumb.parentElement.parentElement;
+    if (container) {
+      container.scrollLeft = container.scrollWidth;
+    }
+  }, 100);
 
   // 调整面包屑导航的可见性
   setTimeout(adjustBreadcrumbVisibility, 0);
