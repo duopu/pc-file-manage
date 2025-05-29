@@ -960,7 +960,7 @@ function resetFileViewers() {
 
 // 删除文件
 async function deleteFile(filePath) {
-    if (!confirm('确认要删除此文件吗？此操作不可恢复！')) {
+    if (!confirm('确认要删除此文件吗？文件将被移至回收站')) {
         return;
     }
 
@@ -976,7 +976,7 @@ async function deleteFile(filePath) {
         const data = await response.json();
 
         if (data.success) {
-            console.warn('文件已成功删除');
+            console.warn('文件已移至回收站');
             // 重新加载当前文件夹
             loadFolder(currentPath);
         } else {

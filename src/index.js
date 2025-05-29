@@ -6,6 +6,7 @@ const fs = require('fs');
 const { promisify } = require('util');
 const multer = require('multer');
 const { exec } = require('child_process');
+const trash = require('trash');
 
 const app = express();
 const port = 3000;
@@ -322,9 +323,9 @@ app.delete('/api/file', async (req, res) => {
       return res.status(404).json({ error: '文件不存在' });
     }
 
-    // 使用fs.unlink删除文件
-    await promisify(fs.unlink)(filePath);
-    res.json({ success: true, message: '文件已删除' });
+    // 使用trash库将文件移动到回收站
+    await trash([filePath]);
+    res.json({ success: true, message: '文件已移至回收站' });
   } catch (error) {
     console.error('删除文件失败:', error);
     res.status(500).json({ error: '删除文件失败', details: error.message });
