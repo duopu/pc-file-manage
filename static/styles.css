@@ -14,13 +14,15 @@ body {
     color: white;
     padding: 12px 24px;
     border-radius: 8px;
-    z-index: 2000;
+    z-index: 2100;
     opacity: 0;
     transition: transform 0.3s, opacity 0.3s;
     text-align: center;
     min-width: 200px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     pointer-events: none;
+    font-weight: 500;
+    letter-spacing: 0.5px;
 }
 
 .centered-message.show {
@@ -171,6 +173,13 @@ body {
     /* 优化搜索框在移动端的显示 */
     .navbar .input-group {
         max-width: calc(100vw - 180px);
+    }
+
+    .centered-message {
+        width: 80%;
+        max-width: 300px;
+        padding: 10px 20px;
+        top: 45%;
     }
 }
 

@@ -19,9 +19,6 @@ let currentHistoryIndex = -1;
 // 添加主题相关变量
 let currentTheme = localStorage.getItem('theme') || 'light';
 
-// 添加变量用于跟踪当前打开的下拉菜单
-let currentOpenDropdown = null;
-
 // DOM 元素
 const fileList = document.getElementById("fileList");
 const fileTable = document.getElementById("fileTable");
@@ -146,22 +143,22 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // 监听下拉菜单打开事件，确保一次只打开一个下拉菜单
   document.addEventListener('show.bs.dropdown', (e) => {
-    // 如果有其他已打开的下拉菜单，关闭它
-    if (currentOpenDropdown && currentOpenDropdown !== e.target) {
-      const dropdown = bootstrap.Dropdown.getInstance(currentOpenDropdown.querySelector('.dropdown-toggle'));
-      if (dropdown) {
-        dropdown.hide();
-      }
-    }
-    // 更新当前打开的下拉菜单
-    currentOpenDropdown = e.target;
-  });
+    // 获取所有当前打开的下拉菜单
+    const openDropdowns = document.querySelectorAll('.dropdown-menu.show');
 
-  // 监听下拉菜单关闭事件
-  document.addEventListener('hidden.bs.dropdown', (e) => {
-    if (currentOpenDropdown === e.target) {
-      currentOpenDropdown = null;
-    }
+    // 关闭所有其他打开的下拉菜单
+    openDropdowns.forEach(menu => {
+      // 确保不是当前正在打开的菜单
+      if (menu !== e.target.querySelector('.dropdown-menu')) {
+        const parentDropdown = menu.closest('.dropdown');
+        if (parentDropdown) {
+          const dropdownInstance = bootstrap.Dropdown.getInstance(parentDropdown.querySelector('[data-bs-toggle="dropdown"]'));
+          if (dropdownInstance) {
+            dropdownInstance.hide();
+          }
+        }
+      }
+    });
   });
 });
 
@@ -860,11 +857,12 @@ function createFileRow(file) {
           navigator.clipboard
             .writeText(file.name)
             .then(() => {
-              showToast("文件名已复制到剪贴板", "success");
+              // 使用居中提示而不是Toast
+              showCenteredMessage("文件名已复制到剪贴板");
             })
             .catch((err) => {
               console.error("复制失败:", err);
-              showToast("复制失败", "error");
+              showCenteredMessage("复制失败", "error");
             });
         });
         dropdownMenu.appendChild(copyItem);
@@ -1611,9 +1609,8 @@ function createSearchResultRow(file, query) {
         navigator.clipboard
           .writeText(file.name)
           .then(() => {
-            console.warn("文件名已复制到剪贴板");
             // 使用居中提示替代旧的提示方式
-            showCenteredMessage("文件名已复制");
+            showCenteredMessage("文件名已复制到剪贴板");
           })
           .catch((err) => {
             console.error("复制失败:", err);
