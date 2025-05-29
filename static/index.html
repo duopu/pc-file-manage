@@ -251,9 +251,22 @@
 
         <!-- 视频预览 -->
         <div id="fullscreenVideoViewer" class="d-none">
+          <!-- 添加视频标题 -->
+          <div class="video-title-bar">
+            <h5 id="videoTitle" class="mb-0"></h5>
+          </div>
           <video controls id="fullscreenVideo">
             您的浏览器不支持HTML5视频播放
           </video>
+          <!-- 添加视频导航按钮 -->
+          <div class="video-navigation-controls">
+            <button type="button" class="btn btn-light rounded-circle" id="prevVideoBtn">
+              <i class="bi bi-chevron-left"></i>
+            </button>
+            <button type="button" class="btn btn-light rounded-circle" id="nextVideoBtn">
+              <i class="bi bi-chevron-right"></i>
+            </button>
+          </div>
         </div>
       </div>
     </div>

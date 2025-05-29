@@ -23,6 +23,10 @@ let currentTheme = localStorage.getItem('theme') || 'light';
 let currentFolderImages = []; // 当前文件夹中的所有图片
 let currentImageIndex = -1;   // 当前显示的图片索引
 
+// 添加视频浏览相关变量
+let currentFolderVideos = []; // 当前文件夹中的所有视频
+let currentVideoIndex = -1;   // 当前显示的视频索引
+
 // DOM 元素
 const fileList = document.getElementById("fileList");
 const fileTable = document.getElementById("fileTable");
@@ -94,6 +98,9 @@ const fullscreenVideoViewer = document.getElementById("fullscreenVideoViewer");
 const fullscreenVideo = document.getElementById("fullscreenVideo");
 const prevImageBtn = document.getElementById("prevImageBtn");
 const nextImageBtn = document.getElementById("nextImageBtn");
+const prevVideoBtn = document.getElementById("prevVideoBtn");
+const nextVideoBtn = document.getElementById("nextVideoBtn");
+const videoTitle = document.getElementById("videoTitle");
 
 // 响应式布局元素
 const sidebar = document.getElementById("sidebar");
@@ -135,6 +142,14 @@ document.addEventListener("DOMContentLoaded", () => {
     nextImageBtn.addEventListener("click", showNextImage);
   }
 
+  // 绑定视频导航按钮事件
+  if (prevVideoBtn) {
+    prevVideoBtn.addEventListener("click", showPreviousVideo);
+  }
+  if (nextVideoBtn) {
+    nextVideoBtn.addEventListener("click", showNextVideo);
+  }
+
   // 监听ESC键关闭媒体预览
   document.addEventListener("keydown", (e) => {
     if (
@@ -145,11 +160,19 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // 添加左右箭头键导航支持
-    if (!mediaPreviewOverlay.classList.contains("d-none") && fullscreenImageViewer && !fullscreenImageViewer.classList.contains("d-none")) {
-      if (e.key === "ArrowLeft") {
-        showPreviousImage();
-      } else if (e.key === "ArrowRight") {
-        showNextImage();
+    if (!mediaPreviewOverlay.classList.contains("d-none")) {
+      if (fullscreenImageViewer && !fullscreenImageViewer.classList.contains("d-none")) {
+        if (e.key === "ArrowLeft") {
+          showPreviousImage();
+        } else if (e.key === "ArrowRight") {
+          showNextImage();
+        }
+      } else if (fullscreenVideoViewer && !fullscreenVideoViewer.classList.contains("d-none")) {
+        if (e.key === "ArrowLeft") {
+          showPreviousVideo();
+        } else if (e.key === "ArrowRight") {
+          showNextVideo();
+        }
       }
     }
   });
@@ -387,7 +410,7 @@ function loadFolderWithoutHistory(path) {
           return a.name.localeCompare(b.name);
         });
 
-        // 收集当前文件夹中的所有图片
+        // 收集当前文件夹中的所有图片和视频
         collectImagesInFolder(sortedFiles);
 
         // 添加文件和文件夹到列表
@@ -552,6 +575,14 @@ function closeMediaPreview() {
 
   // 重置当前图片索引
   currentImageIndex = -1;
+
+  // 重置当前视频索引
+  currentVideoIndex = -1;
+
+  // 清除视频标题
+  if (videoTitle) {
+    videoTitle.textContent = "";
+  }
 
   // 隐藏预览界面
   mediaPreviewOverlay.classList.add("d-none");
@@ -727,7 +758,7 @@ async function loadFolder(path) {
       return a.name.localeCompare(b.name);
     });
 
-    // 收集当前文件夹中的所有图片
+    // 收集当前文件夹中的所有图片和视频
     collectImagesInFolder(sortedFiles);
 
     // 添加文件和文件夹到列表
@@ -880,7 +911,7 @@ function createFileRow(file) {
     // 判断文件类型
     const ext = file.name.split(".").pop().toLowerCase();
     const imageExts = ["jpg", "jpeg", "png", "gif", "bmp", "svg", "webp"];
-    const videoExts = ["mp4", "webm", "ogg", "mov"];
+    const videoExts = ["mp4", "webm", "ogg", "mov", "avi", "mkv", "flv"];
 
     const isImage = imageExts.includes(ext);
     const isVideo = videoExts.includes(ext);
@@ -1259,7 +1290,7 @@ async function viewFile(file) {
 
     // 判断是否是媒体文件（图片或视频）
     const imageExts = ["jpg", "jpeg", "png", "gif", "bmp", "svg", "webp"];
-    const videoExts = ["mp4", "webm", "ogg", "mov"];
+    const videoExts = ["mp4", "webm", "ogg", "mov", "avi", "mkv", "flv"];
 
     const isImage = imageExts.includes(ext.toLowerCase());
     const isVideo = videoExts.includes(ext.toLowerCase());
@@ -1271,68 +1302,8 @@ async function viewFile(file) {
           // 使用loadImage函数加载图片
           loadImage(file);
         } else if (isVideo) {
-          // 处理视频预览
-          console.log("请求视频内容:", file.path);
-
-          // 如果有正在进行的请求，中止它
-          if (currentMediaRequest && currentMediaRequest.abort) {
-            currentMediaRequest.abort();
-          }
-
-          // 创建一个可以被中止的请求
-          const controller = new AbortController();
-          const signal = controller.signal;
-          currentMediaRequest = controller;
-
-          const response = await fetch(
-            `/api/file/content?path=${encodeURIComponent(file.path)}`,
-            {
-              signal: signal,
-            }
-          );
-
-          if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-          }
-
-          const data = await response.json();
-          console.log("文件内容响应:", data);
-
-          // 添加时间戳和随机数防止缓存
-          const timestamp = Date.now();
-          const randomStr = Math.random().toString(36).substring(2, 8);
-          const mediaUrl = `${data.url}?t=${timestamp}&r=${randomStr}`;
-
-          // 显示视频预览
-          mediaPreviewOverlay.classList.remove("d-none");
-          fullscreenVideoViewer.classList.remove("d-none");
-
-          // 先清除旧的事件处理器
-          fullscreenVideo.onerror = null;
-          fullscreenVideo.onended = null;
-
-          // 视频加载失败处理
-          fullscreenVideo.onerror = (e) => {
-            console.error("全屏视频加载失败:", e);
-            closeMediaPreview();
-          };
-
-          // 视频加载结束事件
-          fullscreenVideo.onended = () => {
-            console.log("视频播放结束");
-          };
-
-          // 设置视频源
-          fullscreenVideo.src = mediaUrl;
-          fullscreenVideo.type = data.mimeType;
-
-          // 自动播放
-          fullscreenVideo.play().catch((e) => {
-            console.warn("自动播放失败:", e);
-          });
-
-          // 更新当前图片索引
-          updateCurrentImageIndex(file.path);
+          // 使用loadVideo函数加载视频
+          loadVideo(file);
         }
 
         // 清除当前请求引用
@@ -1997,23 +1968,34 @@ function addTableRow(tableBody, label, value) {
   tableBody.appendChild(row);
 }
 
-// 收集当前文件夹中的所有图片
+// 收集当前文件夹中的所有图片和视频
 function collectImagesInFolder(files) {
-  // 清空当前图片列表
+  // 清空当前图片和视频列表
   currentFolderImages = [];
+  currentFolderVideos = [];
 
-  // 只收集非目录的图片文件
+  // 定义文件类型扩展名
+  const imageExts = ["jpg", "jpeg", "png", "gif", "bmp", "svg", "webp"];
+  const videoExts = ["mp4", "webm", "ogg", "mov", "avi", "mkv", "flv"];
+
+  // 只收集非目录的媒体文件
   files.forEach((file) => {
     if (!file.isDirectory && !file.isParent) {
       const ext = file.name.split(".").pop().toLowerCase();
-      const imageExts = ["jpg", "jpeg", "png", "gif", "bmp", "svg", "webp"];
+
+      // 收集图片
       if (imageExts.includes(ext)) {
         currentFolderImages.push(file);
+      }
+
+      // 收集视频
+      if (videoExts.includes(ext)) {
+        currentFolderVideos.push(file);
       }
     }
   });
 
-  console.log(`收集到 ${currentFolderImages.length} 张图片`);
+  console.log(`收集到 ${currentFolderImages.length} 张图片, ${currentFolderVideos.length} 个视频`);
 }
 
 // 更新当前图片索引
@@ -2148,5 +2130,141 @@ function loadImage(file) {
     console.error("加载图片失败:", error);
     imageLoadingInProgress = false;
     showCenteredMessage("加载图片失败", "error");
+  }
+}
+
+// 更新当前视频索引
+function updateCurrentVideoIndex(filePath) {
+  // 查找当前视频在视频列表中的索引
+  currentVideoIndex = currentFolderVideos.findIndex(video => video.path === filePath);
+  console.log(`当前视频索引: ${currentVideoIndex}, 总视频数: ${currentFolderVideos.length}`);
+
+  // 更新导航按钮状态
+  updateVideoNavigationButtons();
+
+  // 更新视频标题
+  if (currentVideoIndex >= 0 && currentVideoIndex < currentFolderVideos.length) {
+    videoTitle.textContent = currentFolderVideos[currentVideoIndex].name;
+  }
+}
+
+// 显示上一个视频
+function showPreviousVideo() {
+  if (currentFolderVideos.length <= 1) return;
+
+  // 计算上一个视频的索引（循环）
+  let prevIndex = currentVideoIndex - 1;
+  if (prevIndex < 0) prevIndex = currentFolderVideos.length - 1;
+
+  // 显示上一个视频
+  loadVideo(currentFolderVideos[prevIndex]);
+}
+
+// 显示下一个视频
+function showNextVideo() {
+  if (currentFolderVideos.length <= 1) return;
+
+  // 计算下一个视频的索引（循环）
+  let nextIndex = currentVideoIndex + 1;
+  if (nextIndex >= currentFolderVideos.length) nextIndex = 0;
+
+  // 显示下一个视频
+  loadVideo(currentFolderVideos[nextIndex]);
+}
+
+// 更新视频导航按钮状态
+function updateVideoNavigationButtons() {
+  // 如果只有一个或没有视频，隐藏导航按钮
+  if (currentFolderVideos.length <= 1) {
+    if (prevVideoBtn) prevVideoBtn.style.display = 'none';
+    if (nextVideoBtn) nextVideoBtn.style.display = 'none';
+  } else {
+    if (prevVideoBtn) prevVideoBtn.style.display = '';
+    if (nextVideoBtn) nextVideoBtn.style.display = '';
+  }
+}
+
+// 加载视频
+function loadVideo(file) {
+  if (!file) return;
+
+  try {
+    console.log("加载视频:", file.path);
+
+    // 如果有正在进行的请求，中止它
+    if (currentMediaRequest && currentMediaRequest.abort) {
+      currentMediaRequest.abort();
+    }
+
+    // 创建一个可以被中止的请求
+    const controller = new AbortController();
+    const signal = controller.signal;
+    currentMediaRequest = controller;
+
+    // 请求视频内容
+    fetch(`/api/file/content?path=${encodeURIComponent(file.path)}`, {
+      signal: signal,
+    })
+    .then(response => {
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      return response.json();
+    })
+    .then(data => {
+      // 添加时间戳和随机数防止缓存
+      const timestamp = Date.now();
+      const randomStr = Math.random().toString(36).substring(2, 8);
+      const mediaUrl = `${data.url}?t=${timestamp}&r=${randomStr}`;
+
+      // 确保视频预览容器可见
+      mediaPreviewOverlay.classList.remove("d-none");
+      fullscreenVideoViewer.classList.remove("d-none");
+
+      // 先清除旧的事件处理器
+      fullscreenVideo.onerror = null;
+      fullscreenVideo.onended = null;
+
+      // 视频加载失败处理
+      fullscreenVideo.onerror = (e) => {
+        console.error("全屏视频加载失败:", e);
+        showCenteredMessage("视频加载失败", "error");
+      };
+
+      // 视频加载结束事件
+      fullscreenVideo.onended = () => {
+        console.log("视频播放结束");
+        // 可以选择自动播放下一个视频
+        // showNextVideo();
+      };
+
+      // 设置视频源
+      fullscreenVideo.src = mediaUrl;
+      fullscreenVideo.type = data.mimeType;
+
+      // 自动播放
+      fullscreenVideo.play().catch((e) => {
+        console.warn("自动播放失败:", e);
+      });
+
+      // 更新当前视频索引和标题
+      updateCurrentVideoIndex(file.path);
+
+      // 清除当前请求引用
+      currentMediaRequest = null;
+    })
+    .catch(error => {
+      // 如果是中止请求导致的错误，不需要处理
+      if (error.name === "AbortError") {
+        console.log("媒体请求已被中止");
+        return;
+      }
+
+      console.error("获取媒体文件内容失败:", error);
+      showCenteredMessage("加载视频失败", "error");
+    });
+  } catch (error) {
+    console.error("加载视频失败:", error);
+    showCenteredMessage("加载视频失败", "error");
   }
 }

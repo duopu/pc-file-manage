@@ -923,3 +923,88 @@ tr:hover .action-icons {
 #fullscreenImageViewer {
     position: relative;
 }
+
+/* 视频导航控制按钮 */
+.video-navigation-controls {
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 20px;
+    z-index: 1050;
+}
+
+.video-navigation-controls button {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0.7;
+    transition: opacity 0.2s;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+}
+
+.video-navigation-controls button:hover {
+    opacity: 1;
+}
+
+.video-navigation-controls i {
+    font-size: 1.2rem;
+}
+
+/* 视频标题栏 */
+.video-title-bar {
+    position: absolute;
+    top: 20px;
+    left: 0;
+    right: 0;
+    text-align: center;
+    z-index: 1050;
+    padding: 10px;
+}
+
+.video-title-bar h5 {
+    color: white;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: inline-block;
+    padding: 8px 15px;
+    border-radius: 5px;
+    max-width: 80%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* 暗色主题下的视频导航按钮 */
+[data-bs-theme="dark"] .video-navigation-controls button {
+    background-color: #333;
+    color: #fff;
+    border-color: #444;
+}
+
+/* 移动设备上的视频导航按钮和标题 */
+@media (max-width: 767.98px) {
+    .video-navigation-controls {
+        bottom: 15px;
+    }
+
+    .video-navigation-controls button {
+        width: 36px;
+        height: 36px;
+    }
+
+    .video-title-bar {
+        top: 10px;
+    }
+
+    .video-title-bar h5 {
+        font-size: 1rem;
+        padding: 5px 10px;
+    }
+}
+
+#fullscreenVideoViewer {
+    position: relative;
+}
