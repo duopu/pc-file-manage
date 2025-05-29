@@ -19,6 +19,10 @@ let currentHistoryIndex = -1;
 // 添加主题相关变量
 let currentTheme = localStorage.getItem('theme') || 'light';
 
+// 添加图片浏览相关变量
+let currentFolderImages = []; // 当前文件夹中的所有图片
+let currentImageIndex = -1;   // 当前显示的图片索引
+
 // DOM 元素
 const fileList = document.getElementById("fileList");
 const fileTable = document.getElementById("fileTable");
@@ -88,6 +92,8 @@ const fullscreenImageViewer = document.getElementById("fullscreenImageViewer");
 const fullscreenImage = document.getElementById("fullscreenImage");
 const fullscreenVideoViewer = document.getElementById("fullscreenVideoViewer");
 const fullscreenVideo = document.getElementById("fullscreenVideo");
+const prevImageBtn = document.getElementById("prevImageBtn");
+const nextImageBtn = document.getElementById("nextImageBtn");
 
 // 响应式布局元素
 const sidebar = document.getElementById("sidebar");
@@ -121,6 +127,14 @@ document.addEventListener("DOMContentLoaded", () => {
   // 绑定媒体预览关闭按钮事件
   mediaCloseBtn.addEventListener("click", closeMediaPreview);
 
+  // 绑定图片导航按钮事件
+  if (prevImageBtn) {
+    prevImageBtn.addEventListener("click", showPreviousImage);
+  }
+  if (nextImageBtn) {
+    nextImageBtn.addEventListener("click", showNextImage);
+  }
+
   // 监听ESC键关闭媒体预览
   document.addEventListener("keydown", (e) => {
     if (
@@ -128,6 +142,15 @@ document.addEventListener("DOMContentLoaded", () => {
       !mediaPreviewOverlay.classList.contains("d-none")
     ) {
       closeMediaPreview();
+    }
+
+    // 添加左右箭头键导航支持
+    if (!mediaPreviewOverlay.classList.contains("d-none") && fullscreenImageViewer && !fullscreenImageViewer.classList.contains("d-none")) {
+      if (e.key === "ArrowLeft") {
+        showPreviousImage();
+      } else if (e.key === "ArrowRight") {
+        showNextImage();
+      }
     }
   });
 
@@ -364,6 +387,9 @@ function loadFolderWithoutHistory(path) {
           return a.name.localeCompare(b.name);
         });
 
+        // 收集当前文件夹中的所有图片
+        collectImagesInFolder(sortedFiles);
+
         // 添加文件和文件夹到列表
         sortedFiles.forEach((file) => {
           const row = createFileRow(file);
@@ -523,6 +549,9 @@ function closeMediaPreview() {
   fullscreenImage.onload = null;
   fullscreenImage.onerror = null;
   fullscreenImage.src = "";
+
+  // 重置当前图片索引
+  currentImageIndex = -1;
 
   // 隐藏预览界面
   mediaPreviewOverlay.classList.add("d-none");
@@ -697,6 +726,9 @@ async function loadFolder(path) {
       if (!a.isDirectory && b.isDirectory) return 1;
       return a.name.localeCompare(b.name);
     });
+
+    // 收集当前文件夹中的所有图片
+    collectImagesInFolder(sortedFiles);
 
     // 添加文件和文件夹到列表
     sortedFiles.forEach((file) => {
@@ -1235,70 +1267,42 @@ async function viewFile(file) {
     // 如果是图片或视频，使用全屏预览
     if (isImage || isVideo) {
       try {
-        console.log("请求文件内容:", file.path);
-
-        // 如果有正在进行的请求，中止它
-        if (currentMediaRequest && currentMediaRequest.abort) {
-          currentMediaRequest.abort();
-        }
-
-        // 创建一个可以被中止的请求
-        const controller = new AbortController();
-        const signal = controller.signal;
-        currentMediaRequest = controller;
-
-        const response = await fetch(
-          `/api/file/content?path=${encodeURIComponent(file.path)}`,
-          {
-            signal: signal,
-          }
-        );
-
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
-        const data = await response.json();
-        console.log("文件内容响应:", data);
-
-        // 添加时间戳和随机数防止缓存
-        const timestamp = Date.now();
-        const randomStr = Math.random().toString(36).substring(2, 8);
-        const mediaUrl = `${data.url}?t=${timestamp}&r=${randomStr}`;
-
         if (isImage) {
-          // 标记图片正在加载
-          imageLoadingInProgress = true;
-
-          // 显示加载中
-          mediaPreviewOverlay.classList.remove("d-none");
-          fullscreenImageViewer.classList.remove("d-none");
-
-          // 先清除旧的事件处理器
-          fullscreenImage.onload = null;
-          fullscreenImage.onerror = null;
-
-          // 设置图片加载事件
-          fullscreenImage.onload = () => {
-            console.log("全屏图片加载成功");
-            // 加载完成后标记为非加载状态
-            imageLoadingInProgress = false;
-          };
-
-          // 图片加载失败处理
-          fullscreenImage.onerror = (e) => {
-            // 只有在图片仍在加载时才处理错误
-            if (imageLoadingInProgress) {
-              console.error("全屏图片加载失败:", e);
-              // 标记为非加载状态
-              imageLoadingInProgress = false;
-              closeMediaPreview();
-            }
-          };
-
-          // 设置图片源
-          fullscreenImage.src = mediaUrl;
+          // 使用loadImage函数加载图片
+          loadImage(file);
         } else if (isVideo) {
+          // 处理视频预览
+          console.log("请求视频内容:", file.path);
+
+          // 如果有正在进行的请求，中止它
+          if (currentMediaRequest && currentMediaRequest.abort) {
+            currentMediaRequest.abort();
+          }
+
+          // 创建一个可以被中止的请求
+          const controller = new AbortController();
+          const signal = controller.signal;
+          currentMediaRequest = controller;
+
+          const response = await fetch(
+            `/api/file/content?path=${encodeURIComponent(file.path)}`,
+            {
+              signal: signal,
+            }
+          );
+
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+
+          const data = await response.json();
+          console.log("文件内容响应:", data);
+
+          // 添加时间戳和随机数防止缓存
+          const timestamp = Date.now();
+          const randomStr = Math.random().toString(36).substring(2, 8);
+          const mediaUrl = `${data.url}?t=${timestamp}&r=${randomStr}`;
+
           // 显示视频预览
           mediaPreviewOverlay.classList.remove("d-none");
           fullscreenVideoViewer.classList.remove("d-none");
@@ -1326,6 +1330,9 @@ async function viewFile(file) {
           fullscreenVideo.play().catch((e) => {
             console.warn("自动播放失败:", e);
           });
+
+          // 更新当前图片索引
+          updateCurrentImageIndex(file.path);
         }
 
         // 清除当前请求引用
@@ -1988,4 +1995,158 @@ function addTableRow(tableBody, label, value) {
   row.appendChild(labelCell);
   row.appendChild(valueCell);
   tableBody.appendChild(row);
+}
+
+// 收集当前文件夹中的所有图片
+function collectImagesInFolder(files) {
+  // 清空当前图片列表
+  currentFolderImages = [];
+
+  // 只收集非目录的图片文件
+  files.forEach((file) => {
+    if (!file.isDirectory && !file.isParent) {
+      const ext = file.name.split(".").pop().toLowerCase();
+      const imageExts = ["jpg", "jpeg", "png", "gif", "bmp", "svg", "webp"];
+      if (imageExts.includes(ext)) {
+        currentFolderImages.push(file);
+      }
+    }
+  });
+
+  console.log(`收集到 ${currentFolderImages.length} 张图片`);
+}
+
+// 更新当前图片索引
+function updateCurrentImageIndex(filePath) {
+  // 查找当前图片在图片列表中的索引
+  currentImageIndex = currentFolderImages.findIndex(img => img.path === filePath);
+  console.log(`当前图片索引: ${currentImageIndex}, 总图片数: ${currentFolderImages.length}`);
+
+  // 更新导航按钮状态
+  updateImageNavigationButtons();
+}
+
+// 显示上一张图片
+function showPreviousImage() {
+  if (currentFolderImages.length <= 1) return;
+
+  // 计算上一张图片的索引（循环）
+  let prevIndex = currentImageIndex - 1;
+  if (prevIndex < 0) prevIndex = currentFolderImages.length - 1;
+
+  // 显示上一张图片
+  loadImage(currentFolderImages[prevIndex]);
+}
+
+// 显示下一张图片
+function showNextImage() {
+  if (currentFolderImages.length <= 1) return;
+
+  // 计算下一张图片的索引（循环）
+  let nextIndex = currentImageIndex + 1;
+  if (nextIndex >= currentFolderImages.length) nextIndex = 0;
+
+  // 显示下一张图片
+  loadImage(currentFolderImages[nextIndex]);
+}
+
+// 更新图片导航按钮状态
+function updateImageNavigationButtons() {
+  // 如果只有一张或没有图片，隐藏导航按钮
+  if (currentFolderImages.length <= 1) {
+    if (prevImageBtn) prevImageBtn.style.display = 'none';
+    if (nextImageBtn) nextImageBtn.style.display = 'none';
+  } else {
+    if (prevImageBtn) prevImageBtn.style.display = '';
+    if (nextImageBtn) nextImageBtn.style.display = '';
+  }
+}
+
+// 加载图片
+function loadImage(file) {
+  if (!file) return;
+
+  try {
+    console.log("加载图片:", file.path);
+
+    // 标记图片正在加载
+    imageLoadingInProgress = true;
+
+    // 如果有正在进行的请求，中止它
+    if (currentMediaRequest && currentMediaRequest.abort) {
+      currentMediaRequest.abort();
+    }
+
+    // 创建一个可以被中止的请求
+    const controller = new AbortController();
+    const signal = controller.signal;
+    currentMediaRequest = controller;
+
+    // 请求图片内容
+    fetch(`/api/file/content?path=${encodeURIComponent(file.path)}`, {
+      signal: signal,
+    })
+    .then(response => {
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      return response.json();
+    })
+    .then(data => {
+      // 添加时间戳和随机数防止缓存
+      const timestamp = Date.now();
+      const randomStr = Math.random().toString(36).substring(2, 8);
+      const mediaUrl = `${data.url}?t=${timestamp}&r=${randomStr}`;
+
+      // 确保图片预览容器可见
+      mediaPreviewOverlay.classList.remove("d-none");
+      fullscreenImageViewer.classList.remove("d-none");
+
+      // 先清除旧的事件处理器
+      fullscreenImage.onload = null;
+      fullscreenImage.onerror = null;
+
+      // 设置图片加载事件
+      fullscreenImage.onload = () => {
+        console.log("全屏图片加载成功");
+        // 加载完成后标记为非加载状态
+        imageLoadingInProgress = false;
+
+        // 更新当前图片索引
+        updateCurrentImageIndex(file.path);
+      };
+
+      // 图片加载失败处理
+      fullscreenImage.onerror = (e) => {
+        // 只有在图片仍在加载时才处理错误
+        if (imageLoadingInProgress) {
+          console.error("全屏图片加载失败:", e);
+          // 标记为非加载状态
+          imageLoadingInProgress = false;
+          showCenteredMessage("图片加载失败", "error");
+        }
+      };
+
+      // 设置图片源
+      fullscreenImage.src = mediaUrl;
+
+      // 清除当前请求引用
+      currentMediaRequest = null;
+    })
+    .catch(error => {
+      // 如果是中止请求导致的错误，不需要处理
+      if (error.name === "AbortError") {
+        console.log("媒体请求已被中止");
+        return;
+      }
+
+      console.error("获取媒体文件内容失败:", error);
+      imageLoadingInProgress = false; // 确保重置图片加载状态
+      showCenteredMessage("加载图片失败", "error");
+    });
+  } catch (error) {
+    console.error("加载图片失败:", error);
+    imageLoadingInProgress = false;
+    showCenteredMessage("加载图片失败", "error");
+  }
 }

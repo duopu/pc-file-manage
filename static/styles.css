@@ -870,3 +870,56 @@ tr:hover .action-icons {
 [data-bs-theme="dark"] #fileDetailsModal .text-muted {
   color: #adb5bd !important;
 }
+
+/* 图片导航控制按钮 */
+.image-navigation-controls {
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 20px;
+    z-index: 1050;
+}
+
+.image-navigation-controls button {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0.7;
+    transition: opacity 0.2s;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+}
+
+.image-navigation-controls button:hover {
+    opacity: 1;
+}
+
+.image-navigation-controls i {
+    font-size: 1.2rem;
+}
+
+/* 暗色主题下的导航按钮 */
+[data-bs-theme="dark"] .image-navigation-controls button {
+    background-color: #333;
+    color: #fff;
+    border-color: #444;
+}
+
+/* 移动设备上的图片导航按钮 */
+@media (max-width: 767.98px) {
+    .image-navigation-controls {
+        bottom: 15px;
+    }
+
+    .image-navigation-controls button {
+        width: 36px;
+        height: 36px;
+    }
+}
+
+#fullscreenImageViewer {
+    position: relative;
+}
