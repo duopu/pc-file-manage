@@ -1,6 +1,8 @@
 // 全局变量
 let currentPath = ""; // 默认不设置初始路径，等待加载驱动器
 const MAX_RECENT_FILES = 5;
+let isInRecycleBin = false; // 标记是否在回收站中
+let currentFileToDelete = ""; // 当前要删除的文件路径
 
 // 添加一个变量用于跟踪当前媒体请求
 let currentMediaRequest = null;
@@ -37,6 +39,14 @@ const previewVideo = document.getElementById("previewVideo");
 const audioPlayer = document.getElementById("audioPlayer");
 const previewAudio = document.getElementById("previewAudio");
 const unsupportedFileViewer = document.getElementById("unsupportedFileViewer");
+
+// 新增的删除确认和提示元素
+const deleteConfirmModal = new bootstrap.Modal(document.getElementById('deleteConfirmModal'));
+const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
+const deleteFileName = document.getElementById('deleteFileName');
+const deleteFilePath = document.getElementById('deleteFilePath');
+const operationToast = new bootstrap.Toast(document.getElementById('operationToast'));
+const toastMessage = document.getElementById('toastMessage');
 
 // 媒体预览元素
 const mediaPreviewOverlay = document.getElementById("mediaPreviewOverlay");
@@ -94,6 +104,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // 初始化时执行一次窗口大小检查
   handleWindowResize();
+
+  // 绑定删除确认按钮事件
+  confirmDeleteBtn.addEventListener('click', () => {
+    const filePath = deleteFilePath.value;
+    if (filePath) {
+      deleteFile(filePath);
+      deleteConfirmModal.hide();
+    }
+  });
 });
 
 // 创建侧边栏背景遮罩
@@ -565,7 +584,7 @@ function createFileRow(file) {
 
     // 删除按钮
     const deleteBtn = createActionButton("删除", "bi-trash", () =>
-      deleteFile(file.path)
+      showDeleteConfirmModal(file.path)
     );
     actionsDiv.appendChild(deleteBtn);
 
@@ -1002,19 +1021,44 @@ function resetFileViewers() {
   previewAudio.src = "";
 }
 
-// 删除文件
-async function deleteFile(filePath) {
-  if (!confirm("确认要删除此文件吗？文件将被移至回收站")) {
-    return;
+// 显示删除确认对话框
+function showDeleteConfirmModal(filePath) {
+  const fileName = filePath.split('/').pop();
+  deleteFileName.textContent = fileName;
+  deleteFilePath.value = filePath;
+  deleteConfirmModal.show();
+}
+
+// 显示操作成功的Toast提示
+function showToast(message, type = 'success') {
+  toastMessage.textContent = message;
+  const toastElement = document.getElementById('operationToast');
+
+  // 设置Toast的颜色
+  toastElement.classList.remove('bg-success', 'bg-danger', 'bg-warning', 'bg-info');
+  switch (type) {
+    case 'error':
+      toastElement.classList.add('bg-danger');
+      break;
+    case 'warning':
+      toastElement.classList.add('bg-warning');
+      break;
+    case 'info':
+      toastElement.classList.add('bg-info');
+      break;
+    default:
+      toastElement.classList.add('bg-success');
   }
 
+  operationToast.show();
+}
+
+// 删除文件
+async function deleteFile(filePath) {
   try {
-    const response = await fetch(
-      `/api/file?path=${encodeURIComponent(filePath)}`,
-      {
-        method: "DELETE",
-      }
-    );
+    const response = await fetch(`/api/file?path=${encodeURIComponent(filePath)}`, {
+      method: 'DELETE'
+    });
 
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
@@ -1023,15 +1067,15 @@ async function deleteFile(filePath) {
     const data = await response.json();
 
     if (data.success) {
-      console.warn("文件已移至回收站");
+      showToast('文件已移至回收站');
       // 重新加载当前文件夹
       loadFolder(currentPath);
     } else {
-      throw new Error(data.error || "未知错误");
+      throw new Error(data.error || '未知错误');
     }
   } catch (error) {
-    console.error("删除文件失败:", error);
-    console.warn(`删除文件失败: ${error.message}`);
+    console.error('删除文件失败:', error);
+    showToast(`删除文件失败: ${error.message}`, 'error');
   }
 }
 
