@@ -1008,3 +1008,40 @@ tr:hover .action-icons {
 #fullscreenVideoViewer {
     position: relative;
 }
+
+/* 图片标题栏 */
+.image-title-bar {
+    position: absolute;
+    top: 20px;
+    left: 0;
+    right: 0;
+    text-align: center;
+    z-index: 1050;
+    padding: 10px;
+}
+
+.image-title-bar h5 {
+    color: white;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: inline-block;
+    padding: 8px 15px;
+    border-radius: 5px;
+    max-width: 80%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+@media (max-width: 767.98px) {
+    .image-title-bar {
+        top: 10px;
+    }
+    .image-title-bar h5 {
+        font-size: 1rem;
+        padding: 5px 10px;
+    }
+}
+
+#fullscreenImageViewer {
+    position: relative;
+}

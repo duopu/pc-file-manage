@@ -101,6 +101,7 @@ const nextImageBtn = document.getElementById("nextImageBtn");
 const prevVideoBtn = document.getElementById("prevVideoBtn");
 const nextVideoBtn = document.getElementById("nextVideoBtn");
 const videoTitle = document.getElementById("videoTitle");
+const imageTitle = document.getElementById("imageTitle");
 
 // 响应式布局元素
 const sidebar = document.getElementById("sidebar");
@@ -582,6 +583,11 @@ function closeMediaPreview() {
   // 清除视频标题
   if (videoTitle) {
     videoTitle.textContent = "";
+  }
+
+  // 清除图片标题
+  if (imageTitle) {
+    imageTitle.textContent = "";
   }
 
   // 隐藏预览界面
@@ -2006,6 +2012,10 @@ function updateCurrentImageIndex(filePath) {
 
   // 更新导航按钮状态
   updateImageNavigationButtons();
+  // 设置图片标题
+  if (currentImageIndex >= 0 && currentImageIndex < currentFolderImages.length && imageTitle) {
+    imageTitle.textContent = currentFolderImages[currentImageIndex].name;
+  }
 }
 
 // 显示上一张图片
