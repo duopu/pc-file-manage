@@ -7,6 +7,7 @@ const { promisify } = require('util');
 const multer = require('multer');
 const { exec } = require('child_process');
 const trash = require('trash');
+const { spawn } = require('child_process');
 
 const app = express();
 const port = 3000;
@@ -91,7 +92,7 @@ app.get('/api/file/content', async (req, res) => {
     // 判断文件类型
     const textFileExts = ['.txt', '.js', '.html', '.css', '.json', '.md', '.log', '.xml', '.csv', '.py', '.java', '.c', '.cpp', '.h', '.ts', '.jsx', '.vue', '.ini', '.config'];
     const imageFileExts = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.svg', '.webp'];
-    const videoFileExts = ['.mp4', '.webm', '.ogg', '.mov'];
+    const videoFileExts = ['.mp4', '.webm', '.ogg', '.mov', '.ts'];
     const audioFileExts = ['.mp3', '.wav', '.ogg', '.m4a', '.aac', '.flac'];
 
     // 检查文件类型
@@ -300,6 +301,7 @@ function getMimeType(extension) {
     '.webm': 'video/webm',
     '.ogg': 'application/ogg',
     '.mov': 'video/quicktime',
+    '.ts': 'video/mp2t',
     '.mp3': 'audio/mpeg',
     '.wav': 'audio/wav',
     '.m4a': 'audio/m4a',
@@ -421,6 +423,287 @@ app.get('/api/folder', async (req, res) => {
     res.status(500).json({ error: '读取文件夹失败', details: error.message });
   }
 });
+
+// 获取文件详细信息
+app.get('/api/file/details', async (req, res) => {
+  try {
+    const filePath = req.query.path;
+    console.log('请求文件详细信息:', filePath);
+
+    if (!filePath) {
+      return res.status(400).json({ error: '缺少文件路径' });
+    }
+
+    // 检查文件是否存在
+    if (!fs.existsSync(filePath)) {
+      console.error('文件不存在:', filePath);
+      return res.status(404).json({ error: '文件不存在' });
+    }
+
+    // 获取基本文件信息
+    let stats;
+    try {
+      stats = fs.statSync(filePath);
+    } catch (statError) {
+      console.error('获取文件状态失败:', statError);
+      return res.status(500).json({
+        error: '获取文件状态失败',
+        details: statError.message
+      });
+    }
+
+    const ext = path.extname(filePath).toLowerCase();
+    const fileName = path.basename(filePath);
+    const fileType = getFileType(ext);
+
+    // 基本文件信息
+    const fileInfo = {
+      name: fileName,
+      path: filePath,
+      size: stats.size,
+      sizeFormatted: formatFileSize(stats.size),
+      created: stats.birthtime,
+      modified: stats.mtime,
+      accessed: stats.atime,
+      type: fileType,
+      extension: ext.substring(1)
+    };
+
+    // 对于媒体文件，尝试获取额外信息
+    if (isMediaFile(ext)) {
+      try {
+        const mediaInfo = await getMediaFileInfo(filePath);
+        Object.assign(fileInfo, mediaInfo);
+      } catch (mediaError) {
+        console.error('获取媒体信息失败:', mediaError);
+        fileInfo.mediaError = mediaError.message;
+      }
+    }
+
+    res.json(fileInfo);
+  } catch (error) {
+    console.error('获取文件详细信息失败:', error);
+    // 确保不会因为错误而导致服务器崩溃
+    res.status(500).json({
+      error: '获取文件详细信息失败',
+      details: error.message,
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    });
+  }
+});
+
+// 格式化文件大小
+function formatFileSize(bytes) {
+  if (bytes === 0) return "0 B";
+  const units = ["B", "KB", "MB", "GB", "TB", "PB"];
+  const i = Math.floor(Math.log(bytes) / Math.log(1024));
+  return parseFloat((bytes / Math.pow(1024, i)).toFixed(2)) + " " + units[i];
+}
+
+// 判断文件类型
+function getFileType(ext) {
+  const textFileExts = ['.txt', '.js', '.html', '.css', '.json', '.md', '.log', '.xml', '.csv', '.py', '.java', '.c', '.cpp', '.h', '.ts', '.jsx', '.vue', '.ini', '.config'];
+  const imageFileExts = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.svg', '.webp'];
+  const videoFileExts = ['.mp4', '.webm', '.ogg', '.mov', '.ts'];
+  const audioFileExts = ['.mp3', '.wav', '.ogg', '.m4a', '.aac', '.flac'];
+  const archiveFileExts = ['.zip', '.rar', '.7z', '.tar', '.gz', '.bz2'];
+  const docFileExts = ['.pdf', '.doc', '.docx', '.xls', '.xlsx', '.ppt', '.pptx'];
+
+  if (textFileExts.includes(ext)) return '文本文件';
+  if (imageFileExts.includes(ext)) return '图片文件';
+  if (videoFileExts.includes(ext)) return '视频文件';
+  if (audioFileExts.includes(ext)) return '音频文件';
+  if (archiveFileExts.includes(ext)) return '压缩文件';
+  if (docFileExts.includes(ext)) return '文档文件';
+
+  return '未知类型';
+}
+
+// 判断是否是媒体文件
+function isMediaFile(ext) {
+  const mediaFileExts = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.svg', '.webp',
+                         '.mp4', '.webm', '.ogg', '.mov', '.ts',
+                         '.mp3', '.wav', '.m4a', '.aac', '.flac'];
+  return mediaFileExts.includes(ext);
+}
+
+// 获取媒体文件信息
+async function getMediaFileInfo(filePath) {
+  return new Promise((resolve) => {
+    try {
+      // 检查文件是否存在
+      if (!fs.existsSync(filePath)) {
+        return resolve({
+          mediaInfo: '文件不存在或无法访问'
+        });
+      }
+
+      // 获取文件扩展名
+      const ext = path.extname(filePath).toLowerCase();
+
+      // 尝试使用ffprobe获取媒体文件信息
+      const ffprobe = spawn('ffprobe', [
+        '-v', 'quiet',
+        '-print_format', 'json',
+        '-show_format',
+        '-show_streams',
+        filePath
+      ]);
+
+      let output = '';
+      let errorOutput = '';
+
+      ffprobe.stdout.on('data', (data) => {
+        output += data.toString();
+      });
+
+      ffprobe.stderr.on('data', (data) => {
+        errorOutput += data.toString();
+      });
+
+      // 设置超时处理
+      const timeout = setTimeout(() => {
+        try {
+          ffprobe.kill();
+        } catch (e) {
+          console.error('终止ffprobe进程失败:', e);
+        }
+        // 尝试使用备用方法
+        getBasicMediaInfo(filePath, ext).then(info => resolve(info));
+      }, 5000); // 5秒超时
+
+      ffprobe.on('error', (err) => {
+        clearTimeout(timeout);
+        console.warn('ffprobe命令执行失败:', err.message);
+        // 尝试使用备用方法
+        getBasicMediaInfo(filePath, ext).then(info => resolve(info));
+      });
+
+      ffprobe.on('close', (code) => {
+        clearTimeout(timeout);
+        if (code !== 0) {
+          console.warn('ffprobe命令失败，返回基本信息:', errorOutput);
+          // 尝试使用备用方法
+          getBasicMediaInfo(filePath, ext).then(info => resolve(info));
+          return;
+        }
+
+        try {
+          const info = JSON.parse(output);
+          const mediaInfo = {
+            format: info.format,
+            duration: info.format.duration ? `${parseFloat(info.format.duration).toFixed(2)}秒` : '未知',
+            bitrate: info.format.bit_rate ? `${Math.round(info.format.bit_rate / 1000)} Kbps` : '未知'
+          };
+
+          // 处理视频流信息
+          const videoStream = info.streams.find(s => s.codec_type === 'video');
+          if (videoStream) {
+            mediaInfo.video = {
+              codec: videoStream.codec_name,
+              resolution: `${videoStream.width}x${videoStream.height}`,
+              aspectRatio: videoStream.display_aspect_ratio || '未知',
+              frameRate: videoStream.r_frame_rate ? eval(videoStream.r_frame_rate).toFixed(2) : '未知',
+              bitrate: videoStream.bit_rate ? `${Math.round(videoStream.bit_rate / 1000)} Kbps` : '未知'
+            };
+          }
+
+          // 处理音频流信息
+          const audioStream = info.streams.find(s => s.codec_type === 'audio');
+          if (audioStream) {
+            mediaInfo.audio = {
+              codec: audioStream.codec_name,
+              sampleRate: audioStream.sample_rate ? `${audioStream.sample_rate} Hz` : '未知',
+              channels: audioStream.channels || '未知',
+              bitrate: audioStream.bit_rate ? `${Math.round(audioStream.bit_rate / 1000)} Kbps` : '未知'
+            };
+          }
+
+          resolve(mediaInfo);
+        } catch (error) {
+          console.error('解析媒体信息失败:', error);
+          // 尝试使用备用方法
+          getBasicMediaInfo(filePath, ext).then(info => resolve(info));
+        }
+      });
+    } catch (error) {
+      console.error('获取媒体信息时发生异常:', error);
+      // 尝试使用备用方法
+      getBasicMediaInfo(filePath, path.extname(filePath).toLowerCase()).then(info => resolve(info));
+    }
+  });
+}
+
+// 使用Node.js原生方法获取基本媒体信息
+async function getBasicMediaInfo(filePath, ext) {
+  try {
+    const stats = fs.statSync(filePath);
+    const mediaInfo = {
+      mediaInfo: 'FFmpeg未安装或不可用，只能显示基本信息'
+    };
+
+    // 对于图片文件，尝试读取文件头来获取更多信息
+    if (['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp'].includes(ext)) {
+      try {
+        // 读取文件的前50个字节来检查图片类型和尺寸
+        const buffer = Buffer.alloc(50);
+        const fd = fs.openSync(filePath, 'r');
+        fs.readSync(fd, buffer, 0, 50, 0);
+        fs.closeSync(fd);
+
+        // 检查PNG图片
+        if (buffer[0] === 0x89 && buffer[1] === 0x50 && buffer[2] === 0x4E && buffer[3] === 0x47) {
+          // PNG图片: 宽度在16-19字节，高度在20-23字节
+          const width = buffer.readUInt32BE(16);
+          const height = buffer.readUInt32BE(20);
+          mediaInfo.format = { format_name: 'PNG' };
+          mediaInfo.video = {
+            codec: 'png',
+            resolution: `${width}x${height}`,
+            aspectRatio: width && height ? (width / height).toFixed(2) : '未知'
+          };
+        }
+        // 检查JPEG图片
+        else if (buffer[0] === 0xFF && buffer[1] === 0xD8) {
+          mediaInfo.format = { format_name: 'JPEG' };
+        }
+        // 检查GIF图片
+        else if (buffer[0] === 0x47 && buffer[1] === 0x49 && buffer[2] === 0x46) {
+          // GIF图片: 宽度在6-7字节，高度在8-9字节
+          const width = buffer.readUInt16LE(6);
+          const height = buffer.readUInt16LE(8);
+          mediaInfo.format = { format_name: 'GIF' };
+          mediaInfo.video = {
+            codec: 'gif',
+            resolution: `${width}x${height}`,
+            aspectRatio: width && height ? (width / height).toFixed(2) : '未知'
+          };
+        }
+        // 检查BMP图片
+        else if (buffer[0] === 0x42 && buffer[1] === 0x4D) {
+          // BMP图片: 宽度在18-21字节，高度在22-25字节
+          const width = buffer.readInt32LE(18);
+          const height = buffer.readInt32LE(22);
+          mediaInfo.format = { format_name: 'BMP' };
+          mediaInfo.video = {
+            codec: 'bmp',
+            resolution: `${width}x${height}`,
+            aspectRatio: width && height ? (width / height).toFixed(2) : '未知'
+          };
+        }
+      } catch (imgError) {
+        console.error('读取图片信息失败:', imgError);
+      }
+    }
+
+    return mediaInfo;
+  } catch (error) {
+    console.error('获取基本媒体信息失败:', error);
+    return {
+      mediaInfo: '无法获取媒体信息'
+    };
+  }
+}
 
 // 捕获所有其他请求并返回首页
 app.get('*', (req, res) => {

@@ -61,6 +61,26 @@ const deleteFilePath = document.getElementById('deleteFilePath');
 const operationToast = new bootstrap.Toast(document.getElementById('operationToast'));
 const toastMessage = document.getElementById('toastMessage');
 
+// 文件详情模态框元素
+const fileDetailsModal = new bootstrap.Modal(document.getElementById('fileDetailsModal'));
+const fileDetailsLoading = document.getElementById('fileDetailsLoading');
+const fileDetailsContent = document.getElementById('fileDetailsContent');
+const detailsFileName = document.getElementById('detailsFileName');
+const detailsFilePath = document.getElementById('detailsFilePath');
+const detailsFileType = document.getElementById('detailsFileType');
+const detailsFileSize = document.getElementById('detailsFileSize');
+const detailsFileCreated = document.getElementById('detailsFileCreated');
+const detailsFileModified = document.getElementById('detailsFileModified');
+const detailsFileAccessed = document.getElementById('detailsFileAccessed');
+const mediaInfoCard = document.getElementById('mediaInfoCard');
+const mediaInfoGeneralTable = document.getElementById('mediaInfoGeneralTable');
+const videoInfoSection = document.getElementById('videoInfoSection');
+const videoInfoTable = document.getElementById('videoInfoTable');
+const audioInfoSection = document.getElementById('audioInfoSection');
+const audioInfoTable = document.getElementById('audioInfoTable');
+const mediaInfoError = document.getElementById('mediaInfoError');
+const mediaInfoErrorText = document.getElementById('mediaInfoErrorText');
+
 // 媒体预览元素
 const mediaPreviewOverlay = document.getElementById("mediaPreviewOverlay");
 const mediaCloseBtn = document.getElementById("mediaCloseBtn");
@@ -844,6 +864,18 @@ function createFileRow(file) {
         dropdownMenu.appendChild(viewItem);
       }
 
+      // 查看详情按钮 - 添加到下拉菜单
+      const detailsItem = document.createElement("a");
+      detailsItem.className = "dropdown-item";
+      detailsItem.href = "#";
+      detailsItem.innerHTML = `<i class="bi bi-info-circle"></i> 查看详情`;
+      detailsItem.addEventListener("click", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        showFileDetails(file.path);
+      });
+      dropdownMenu.appendChild(detailsItem);
+
       // 复制按钮 - 仅对图片和视频文件显示
       if (isImage || isVideo) {
         const copyItem = document.createElement("a");
@@ -943,7 +975,7 @@ function getFileIconClass(file) {
   }
 
   // 视频文件
-  if (["mp4", "avi", "mov", "wmv", "flv", "mkv", "webm"].includes(ext)) {
+  if (["mp4", "avi", "mov", "wmv", "flv", "mkv", "webm", "ts"].includes(ext)) {
     return "bi-file-play video-file-icon";
   }
 
@@ -1603,6 +1635,10 @@ function createSearchResultRow(file, query) {
     const isImage = imageExts.includes(ext);
     const isVideo = videoExts.includes(ext);
 
+    // 查看详情按钮
+    const detailsBtn = createActionButton("查看详情", "bi-info-circle", () => showFileDetails(file.path));
+    actionsDiv.appendChild(detailsBtn);
+
     // 复制按钮 (仅对图片和视频文件显示)
     if (isImage || isVideo) {
       const copyBtn = createActionButton("复制文件名", "bi-clipboard", () => {
@@ -1736,4 +1772,141 @@ function bindMobileNavEvents() {
 
   // 监听驱动器列表的变化
   observer.observe(drivesList, { childList: true });
+}
+
+// 显示文件详情
+async function showFileDetails(filePath) {
+  try {
+    // 显示模态框和加载中状态
+    fileDetailsModal.show();
+    fileDetailsLoading.classList.remove('d-none');
+    fileDetailsContent.classList.add('d-none');
+
+    // 隐藏媒体信息卡片和错误信息
+    mediaInfoCard.classList.add('d-none');
+    mediaInfoError.classList.add('d-none');
+
+    // 清空表格内容
+    mediaInfoGeneralTable.innerHTML = '';
+    videoInfoTable.innerHTML = '';
+    audioInfoTable.innerHTML = '';
+
+    // 获取文件详细信息
+    let fileDetails;
+    try {
+      const response = await fetch(`/api/file/details?path=${encodeURIComponent(filePath)}`);
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      fileDetails = await response.json();
+      console.log('文件详细信息:', fileDetails);
+    } catch (fetchError) {
+      console.error('获取文件详情失败:', fetchError);
+
+      // 显示错误信息
+      mediaInfoError.classList.remove('d-none');
+      mediaInfoErrorText.textContent = `获取文件详情失败: ${fetchError.message}`;
+
+      // 隐藏加载中状态，显示内容（虽然有错误）
+      fileDetailsLoading.classList.add('d-none');
+      fileDetailsContent.classList.remove('d-none');
+      return;
+    }
+
+    // 填充基本信息
+    detailsFileName.textContent = fileDetails.name || '未知';
+    detailsFilePath.textContent = fileDetails.path || '未知';
+    detailsFileType.textContent = `${fileDetails.type || '未知'} (${fileDetails.extension || '未知'})`;
+    detailsFileSize.textContent = fileDetails.sizeFormatted || '未知';
+    detailsFileCreated.textContent = fileDetails.created ? formatDate(new Date(fileDetails.created)) : '未知';
+    detailsFileModified.textContent = fileDetails.modified ? formatDate(new Date(fileDetails.modified)) : '未知';
+    detailsFileAccessed.textContent = fileDetails.accessed ? formatDate(new Date(fileDetails.accessed)) : '未知';
+
+    // 处理媒体信息
+    if (fileDetails.format || fileDetails.video || fileDetails.audio) {
+      // 显示媒体信息卡片
+      mediaInfoCard.classList.remove('d-none');
+
+      // 填充通用媒体信息
+      if (fileDetails.format) {
+        addTableRow(mediaInfoGeneralTable, '格式', fileDetails.format.format_name || '未知');
+        addTableRow(mediaInfoGeneralTable, '时长', fileDetails.duration || '未知');
+        addTableRow(mediaInfoGeneralTable, '总比特率', fileDetails.bitrate || '未知');
+      }
+
+      // 填充视频信息
+      if (fileDetails.video) {
+        videoInfoSection.classList.remove('d-none');
+        addTableRow(videoInfoTable, '编解码器', fileDetails.video.codec || '未知');
+        addTableRow(videoInfoTable, '分辨率', fileDetails.video.resolution || '未知');
+        addTableRow(videoInfoTable, '宽高比', fileDetails.video.aspectRatio || '未知');
+        addTableRow(videoInfoTable, '帧率', fileDetails.video.frameRate || '未知');
+        addTableRow(videoInfoTable, '视频比特率', fileDetails.video.bitrate || '未知');
+      } else {
+        videoInfoSection.classList.add('d-none');
+      }
+
+      // 填充音频信息
+      if (fileDetails.audio) {
+        audioInfoSection.classList.remove('d-none');
+        addTableRow(audioInfoTable, '编解码器', fileDetails.audio.codec || '未知');
+        addTableRow(audioInfoTable, '采样率', fileDetails.audio.sampleRate || '未知');
+        addTableRow(audioInfoTable, '声道数', fileDetails.audio.channels || '未知');
+        addTableRow(audioInfoTable, '音频比特率', fileDetails.audio.bitrate || '未知');
+      } else {
+        audioInfoSection.classList.add('d-none');
+      }
+    } else if (fileDetails.mediaInfo) {
+      // 如果有mediaInfo字段但没有详细媒体信息，显示mediaInfo消息
+      mediaInfoCard.classList.remove('d-none');
+      mediaInfoGeneralTable.innerHTML = '';
+      addTableRow(mediaInfoGeneralTable, '媒体信息', fileDetails.mediaInfo);
+      videoInfoSection.classList.add('d-none');
+      audioInfoSection.classList.add('d-none');
+    } else {
+      // 如果没有媒体信息，隐藏媒体信息卡片
+      mediaInfoCard.classList.add('d-none');
+    }
+
+    // 处理媒体错误
+    if (fileDetails.mediaError) {
+      mediaInfoError.classList.remove('d-none');
+      mediaInfoErrorText.textContent = fileDetails.mediaError;
+    } else {
+      mediaInfoError.classList.add('d-none');
+    }
+
+    // 隐藏加载中状态，显示内容
+    fileDetailsLoading.classList.add('d-none');
+    fileDetailsContent.classList.remove('d-none');
+
+  } catch (error) {
+    console.error('显示文件详情失败:', error);
+
+    // 显示错误信息
+    mediaInfoError.classList.remove('d-none');
+    mediaInfoErrorText.textContent = `显示文件详情失败: ${error.message}`;
+
+    // 隐藏加载中状态，显示内容（虽然有错误）
+    fileDetailsLoading.classList.add('d-none');
+    fileDetailsContent.classList.remove('d-none');
+  }
+}
+
+// 添加表格行
+function addTableRow(tableBody, label, value) {
+  const row = document.createElement('tr');
+
+  const labelCell = document.createElement('th');
+  labelCell.style.width = '30%';
+  labelCell.textContent = label;
+
+  const valueCell = document.createElement('td');
+  valueCell.textContent = value;
+
+  row.appendChild(labelCell);
+  row.appendChild(valueCell);
+  tableBody.appendChild(row);
 }

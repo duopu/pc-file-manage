@@ -217,6 +217,11 @@ body {
     text-align: center;
 }
 
+/* 图片和视频文件图标的特殊间距 */
+.image-file-icon, .video-file-icon {
+    margin-right: -0.67rem; /* 减小间距为原来的三分之一 */
+}
+
 /* 文件夹图标颜色 */
 .folder-icon {
     color: #ffc107;
@@ -793,4 +798,44 @@ tr:hover .action-icons {
     flex-direction: column;
     height: 100%;
     overflow: hidden;
+}
+
+/* 文件详情模态框样式 */
+#fileDetailsModal .modal-dialog {
+  max-width: 800px;
+}
+
+#fileDetailsModal .card-header {
+  font-weight: 500;
+}
+
+#fileDetailsModal .table th {
+  width: 30%;
+  font-weight: 500;
+}
+
+#fileDetailsModal .table td {
+  word-break: break-word;
+}
+
+/* 深色模式下的文件详情模态框 */
+[data-bs-theme="dark"] #fileDetailsModal .card {
+  background-color: #2c2c2c;
+  border-color: #444;
+}
+
+[data-bs-theme="dark"] #fileDetailsModal .card-header {
+  background-color: #0d47a1 !important;
+}
+
+[data-bs-theme="dark"] #fileDetailsModal .table {
+  color: #e0e0e0;
+}
+
+[data-bs-theme="dark"] #fileDetailsModal .table-striped > tbody > tr:nth-of-type(odd) {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+[data-bs-theme="dark"] #fileDetailsModal .text-muted {
+  color: #adb5bd !important;
 }

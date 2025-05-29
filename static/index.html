@@ -366,6 +366,129 @@
       </div>
     </div>
 
+    <!-- 文件详情模态框 -->
+    <div
+      class="modal fade"
+      id="fileDetailsModal"
+      tabindex="-1"
+      aria-labelledby="fileDetailsModalLabel"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="fileDetailsModalLabel">文件详情</h5>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            ></button>
+          </div>
+          <div class="modal-body">
+            <div class="text-center mb-3" id="fileDetailsLoading">
+              <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">加载中...</span>
+              </div>
+              <p class="mt-2">正在加载文件详情...</p>
+            </div>
+            <div id="fileDetailsContent" class="d-none">
+              <!-- 基本信息 -->
+              <div class="card mb-3">
+                <div class="card-header bg-primary text-white">
+                  <i class="bi bi-info-circle me-2"></i>基本信息
+                </div>
+                <div class="card-body">
+                  <table class="table table-striped">
+                    <tbody>
+                      <tr>
+                        <th style="width: 30%">文件名</th>
+                        <td id="detailsFileName"></td>
+                      </tr>
+                      <tr>
+                        <th>文件路径</th>
+                        <td id="detailsFilePath"></td>
+                      </tr>
+                      <tr>
+                        <th>文件类型</th>
+                        <td id="detailsFileType"></td>
+                      </tr>
+                      <tr>
+                        <th>文件大小</th>
+                        <td id="detailsFileSize"></td>
+                      </tr>
+                      <tr>
+                        <th>创建时间</th>
+                        <td id="detailsFileCreated"></td>
+                      </tr>
+                      <tr>
+                        <th>修改时间</th>
+                        <td id="detailsFileModified"></td>
+                      </tr>
+                      <tr>
+                        <th>访问时间</th>
+                        <td id="detailsFileAccessed"></td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <!-- 媒体信息 -->
+              <div class="card mb-3" id="mediaInfoCard">
+                <div class="card-header bg-primary text-white">
+                  <i class="bi bi-film me-2"></i>媒体信息
+                </div>
+                <div class="card-body">
+                  <div id="mediaInfoGeneral">
+                    <h6 class="card-subtitle mb-2 text-muted">通用信息</h6>
+                    <table class="table table-striped">
+                      <tbody id="mediaInfoGeneralTable">
+                        <!-- 媒体通用信息将在这里动态添加 -->
+                      </tbody>
+                    </table>
+                  </div>
+
+                  <div id="videoInfoSection" class="mt-3">
+                    <h6 class="card-subtitle mb-2 text-muted">视频信息</h6>
+                    <table class="table table-striped">
+                      <tbody id="videoInfoTable">
+                        <!-- 视频信息将在这里动态添加 -->
+                      </tbody>
+                    </table>
+                  </div>
+
+                  <div id="audioInfoSection" class="mt-3">
+                    <h6 class="card-subtitle mb-2 text-muted">音频信息</h6>
+                    <table class="table table-striped">
+                      <tbody id="audioInfoTable">
+                        <!-- 音频信息将在这里动态添加 -->
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 错误信息 -->
+              <div class="alert alert-warning d-none" id="mediaInfoError">
+                <i class="bi bi-exclamation-triangle me-2"></i>
+                <span id="mediaInfoErrorText"></span>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              data-bs-dismiss="modal"
+            >
+              关闭
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- 移动端底部导航栏 -->
     <div class="mobile-nav d-md-none" id="mobileNav">
       <div class="mobile-nav-item" id="showSidebarBtn">
