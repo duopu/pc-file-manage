@@ -1306,6 +1306,14 @@ function updateBreadcrumb(path) {
 
   // 检查溢出
   setTimeout(checkPathOverflow, 10);
+
+  // 自动滚动到最右侧，保证当前路径可见
+  const pathContainer = document.querySelector('.path-navigation .d-flex');
+  if (pathContainer) {
+    setTimeout(() => {
+      pathContainer.scrollLeft = pathContainer.scrollWidth;
+    }, 20);
+  }
 }
 
 // 检查路径导航是否溢出并添加适当的类
