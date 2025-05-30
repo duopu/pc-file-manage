@@ -52,15 +52,6 @@
               </button>
             </div>
           </div>
-
-          <!-- 主题切换按钮 -->
-          <button
-            id="themeToggleBtn"
-            class="btn btn-primary nav-btn ms-1"
-            title="切换主题"
-          >
-            <i class="bi bi-moon-fill"></i>
-          </button>
         </div>
       </nav>
 
@@ -535,16 +526,22 @@
       </div>
     </div>
 
-    <!-- 移动端底部导航栏 -->
-    <div class="mobile-nav d-md-none" id="mobileNav">
-      <div class="mobile-nav-item" id="showSidebarBtn">
+    <!-- 添加新的圆形导航按钮 -->
+    <div class="floating-nav-button" id="floatingNavBtn">
+      <i class="bi bi-plus"></i>
+    </div>
+
+    <!-- 添加导航菜单 -->
+    <div class="floating-nav-menu" id="floatingNavMenu">
+      <button class="floating-nav-item" id="showSidebarBtn" title="导航">
         <i class="bi bi-list"></i>
-        <span>导航</span>
-      </div>
-      <div class="mobile-nav-item" id="homeBtn">
+      </button>
+      <button class="floating-nav-item" id="homeBtn" title="首页">
         <i class="bi bi-house"></i>
-        <span>首页</span>
-      </div>
+      </button>
+      <button class="floating-nav-item" id="floatingThemeToggleBtn" title="切换主题">
+        <i class="bi bi-moon-fill"></i>
+      </button>
     </div>
 
     <script src="lib/bootstrap/bootstrap.bundle.min.js"></script>

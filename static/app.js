@@ -234,6 +234,36 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     });
   });
+
+  const floatingThemeToggleBtn = document.getElementById('floatingThemeToggleBtn');
+
+  if (floatingThemeToggleBtn) {
+    floatingThemeToggleBtn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      toggleTheme();
+      // 同步图标
+      const icon = floatingThemeToggleBtn.querySelector('i');
+      if (icon) {
+        if (currentTheme === 'dark') {
+          icon.className = 'bi bi-sun-fill';
+        } else {
+          icon.className = 'bi bi-moon-fill';
+        }
+      }
+      // 关闭菜单
+      floatingNavBtn.classList.remove('active');
+      floatingNavMenu.classList.remove('show');
+    });
+    // 初始化时同步图标
+    const icon = floatingThemeToggleBtn.querySelector('i');
+    if (icon) {
+      if (currentTheme === 'dark') {
+        icon.className = 'bi bi-sun-fill';
+      } else {
+        icon.className = 'bi bi-moon-fill';
+      }
+    }
+  }
 });
 
 // 修正快捷导航路径，确保使用绝对路径
@@ -1781,49 +1811,188 @@ function showCenteredMessage(message, type = 'success') {
 
 // 绑定移动端导航事件
 function bindMobileNavEvents() {
-  // 导航按钮点击事件
+  const floatingNavBtn = document.getElementById('floatingNavBtn');
+  const floatingNavMenu = document.getElementById('floatingNavMenu');
+  const showSidebarBtn = document.getElementById('showSidebarBtn');
+  const homeBtn = document.getElementById('homeBtn');
+
+  let isDragging = false;
+  let moved = false; // 新增
+  let dragJustFinished = false;
+  let currentX = 40, currentY = window.innerHeight - 96;
+  let initialX, initialY, startX, startY;
+
+  function setTranslate(x, y, el) {
+    el.style.transform = `translate3d(${x}px, ${y}px, 0)`;
+  }
+  function updateMenuPosition(x, y) {
+    const btnW = floatingNavBtn.offsetWidth;
+    const btnH = floatingNavBtn.offsetHeight;
+    const menuW = floatingNavMenu.offsetWidth;
+    const menuH = floatingNavMenu.offsetHeight;
+
+    // 计算菜单位置，使其居中于按钮
+    let left = x - (menuW - btnW) / 2;
+    let top = y - (menuH - btnH) / 2;
+
+    // 边界检测，保证菜单不会超出屏幕
+    left = Math.max(0, Math.min(left, window.innerWidth - menuW));
+    top = Math.max(0, Math.min(top, window.innerHeight - menuH));
+
+    floatingNavMenu.style.left = `${left}px`;
+    floatingNavMenu.style.top = `${top}px`;
+  }
+
+  function onMove(e) {
+    let clientX, clientY;
+    if (e.type === 'touchmove') {
+      clientX = e.touches[0].clientX;
+      clientY = e.touches[0].clientY;
+    } else {
+      clientX = e.clientX;
+      clientY = e.clientY;
+    }
+    let dx = clientX - startX;
+    let dy = clientY - startY;
+    if (Math.abs(dx) > 5 || Math.abs(dy) > 5) moved = true; // 新增
+    let newX = initialX + dx;
+    let newY = initialY + dy;
+    // 用 offsetWidth/offsetHeight 保证色块能贴边
+    const btnW = floatingNavBtn.offsetWidth;
+    const btnH = floatingNavBtn.offsetHeight;
+    newX = Math.max(0, Math.min(newX, window.innerWidth - btnW));
+    newY = Math.max(0, Math.min(newY, window.innerHeight - btnH));
+    currentX = newX;
+    currentY = newY;
+    setTranslate(currentX, currentY, floatingNavBtn);
+    updateMenuPosition(currentX, currentY);
+  }
+
+  function dragStart(e) {
+    e.preventDefault();
+    isDragging = true;
+    moved = false; // 新增
+    if (e.type === 'touchstart') {
+      startX = e.touches[0].clientX;
+      startY = e.touches[0].clientY;
+      window.addEventListener('touchmove', onMove, {passive: false});
+      window.addEventListener('touchend', dragEnd, false);
+    } else {
+      startX = e.clientX;
+      startY = e.clientY;
+      window.addEventListener('mousemove', onMove, false);
+      window.addEventListener('mouseup', dragEnd, false);
+    }
+    initialX = currentX;
+    initialY = currentY;
+  }
+
+  function dragEnd(e) {
+    if (!isDragging) return;
+    isDragging = false;
+    dragJustFinished = true;
+    setTimeout(() => { dragJustFinished = false; }, 120);
+    saveButtonPosition(currentX, currentY);
+    window.removeEventListener('mousemove', onMove, false);
+    window.removeEventListener('mouseup', dragEnd, false);
+    window.removeEventListener('touchmove', onMove, false);
+    window.removeEventListener('touchend', dragEnd, false);
+  }
+
+  function saveButtonPosition(x, y) {
+    localStorage.setItem('floatingNavBtnX', x);
+    localStorage.setItem('floatingNavBtnY', y);
+  }
+  function loadButtonPosition() {
+    const savedX = localStorage.getItem('floatingNavBtnX');
+    const savedY = localStorage.getItem('floatingNavBtnY');
+    if (savedX !== null && savedY !== null) {
+      currentX = parseInt(savedX);
+      currentY = parseInt(savedY);
+    }
+    setTranslate(currentX, currentY, floatingNavBtn);
+    updateMenuPosition(currentX, currentY);
+  }
+
+  function layoutFloatingNavItems() {
+    const menu = document.getElementById('floatingNavMenu');
+    const items = menu.querySelectorAll('.floating-nav-item');
+    const radius = 63; // 半径，单位px，原来是48
+    const centerX = 60; // 容器宽度一半
+    const centerY = 60; // 容器高度一半
+    const N = items.length;
+    for (let i = 0; i < N; i++) {
+      const angle = (Math.PI * 2 / N) * i - Math.PI / 2;
+      const x = centerX + radius * Math.cos(angle);
+      const y = centerY + radius * Math.sin(angle);
+      items[i].style.left = x + 'px';
+      items[i].style.top = y + 'px';
+    }
+  }
+
+  if (floatingNavBtn) {
+    loadButtonPosition();
+    floatingNavBtn.addEventListener('mousedown', dragStart, false);
+    floatingNavBtn.addEventListener('touchstart', dragStart, {passive: false});
+    floatingNavBtn.addEventListener('click', function(e) {
+      if (isDragging) return;
+      this.classList.toggle('active');
+      floatingNavMenu.classList.toggle('show');
+      if (floatingNavMenu.classList.contains('show')) layoutFloatingNavItems();
+    });
+    floatingNavBtn.addEventListener('touchend', function(e) {
+      if (!moved) {
+        this.classList.toggle('active');
+        floatingNavMenu.classList.toggle('show');
+        if (floatingNavMenu.classList.contains('show')) layoutFloatingNavItems();
+      }
+      isDragging = false;
+    });
+  }
+
+  window.addEventListener('resize', () => {
+    const btnW = floatingNavBtn.offsetWidth;
+    const btnH = floatingNavBtn.offsetHeight;
+    currentX = Math.max(0, Math.min(currentX, window.innerWidth - btnW));
+    currentY = Math.max(0, Math.min(currentY, window.innerHeight - btnH));
+    setTranslate(currentX, currentY, floatingNavBtn);
+    updateMenuPosition(currentX, currentY);
+  });
+
   if (showSidebarBtn) {
-    console.log("绑定导航按钮事件");
-    showSidebarBtn.addEventListener("click", function (e) {
-      e.preventDefault();
-      console.log("导航按钮被点击");
+    showSidebarBtn.addEventListener('click', function() {
       showSidebar();
+      floatingNavBtn.classList.remove('active');
+      floatingNavMenu.classList.remove('show');
     });
   }
-
-  // 首页按钮点击事件
   if (homeBtn) {
-    homeBtn.addEventListener("click", function (e) {
-      e.preventDefault();
-      console.log("首页按钮被点击");
-      // 回到根目录（默认C盘）
+    homeBtn.addEventListener('click', function() {
       loadFolder("C:");
+      floatingNavBtn.classList.remove('active');
+      floatingNavMenu.classList.remove('show');
     });
   }
-
-  // 在移动设备上点击文件夹项后自动隐藏侧边栏
-  document
-    .querySelectorAll("#drivesList li, .shortcut-list li")
-    .forEach((item) => {
-      item.addEventListener("click", () => {
-        if (window.innerWidth < 768 && sidebar.classList.contains("show")) {
-          hideSidebar();
-        }
-      });
+  document.addEventListener('click', function(e) {
+    if (!floatingNavBtn.contains(e.target) && !floatingNavMenu.contains(e.target)) {
+      floatingNavBtn.classList.remove('active');
+      floatingNavMenu.classList.remove('show');
+    }
+  });
+  document.querySelectorAll("#drivesList li, .shortcut-list li").forEach((item) => {
+    item.addEventListener("click", () => {
+      if (window.innerWidth < 768 && sidebar.classList.contains("show")) {
+        hideSidebar();
+      }
     });
-
-  // 监听驱动器列表变化，为新添加的项添加点击事件
+  });
   const observer = new MutationObserver((mutations) => {
     mutations.forEach((mutation) => {
       if (mutation.type === "childList" && mutation.addedNodes.length > 0) {
-        // 为新添加的驱动器项添加点击事件
         mutation.addedNodes.forEach((node) => {
           if (node.nodeType === 1 && node.matches("[data-path]")) {
             node.addEventListener("click", () => {
-              if (
-                window.innerWidth < 768 &&
-                sidebar.classList.contains("show")
-              ) {
+              if (window.innerWidth < 768 && sidebar.classList.contains("show")) {
                 hideSidebar();
               }
             });
@@ -1832,8 +2001,6 @@ function bindMobileNavEvents() {
       }
     });
   });
-
-  // 监听驱动器列表的变化
   observer.observe(drivesList, { childList: true });
 }
 
