@@ -60,8 +60,11 @@
         <!-- 侧边栏 - 在移动设备上可折叠 -->
         <div class="col-md-2 bg-light p-0 border-end sidebar" id="sidebar">
           <!-- 移动端侧边栏标题 -->
-          <div class="d-md-none p-3 bg-primary text-white">
+          <div class="d-md-none p-3 bg-primary text-white position-relative">
             <h5 class="m-0"><i class="bi bi-folder me-2"></i> 文件管理系统</h5>
+            <button type="button" class="btn btn-sm btn-light sidebar-close-btn position-absolute top-0 end-0 m-2 d-md-none" id="sidebarCloseBtn" title="关闭侧边栏">
+              <i class="bi bi-x-lg"></i>
+            </button>
           </div>
 
           <div class="sidebar-content overflow-auto">

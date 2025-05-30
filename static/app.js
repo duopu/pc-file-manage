@@ -264,6 +264,14 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     }
   }
+
+  // 绑定侧边栏关闭按钮事件
+  const sidebarCloseBtn = document.getElementById('sidebarCloseBtn');
+  if (sidebarCloseBtn) {
+    sidebarCloseBtn.addEventListener('click', function() {
+      hideSidebar();
+    });
+  }
 });
 
 // 修正快捷导航路径，确保使用绝对路径

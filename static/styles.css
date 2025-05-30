@@ -1146,3 +1146,25 @@ tr:hover .action-icons {
 #fullscreenImageViewer {
   position: relative;
 }
+
+.sidebar-close-btn {
+  z-index: 1051;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #333;
+  background: #fff;
+  border: none;
+  transition: background 0.18s, color 0.18s;
+}
+.sidebar-close-btn:hover {
+  background: #e3eafc;
+  color: #1976d2;
+}
+@media (min-width: 768px) {
+  .sidebar-close-btn { display: none !important; }
+}
