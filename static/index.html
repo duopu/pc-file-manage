@@ -325,12 +325,12 @@
             <form id="renameForm">
               <div class="mb-3">
                 <label for="newFilename" class="form-label">新文件名</label>
-                <input
-                  type="text"
-                  class="form-control"
+                <textarea
+                  class="form-control rename-textarea"
                   id="newFilename"
+                  rows="4"
                   required
-                />
+                ></textarea>
                 <input type="hidden" id="oldFilePath" />
               </div>
             </form>
