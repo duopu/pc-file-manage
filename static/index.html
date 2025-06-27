@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>文件管理系统</title>
+    <title>系统</title>
     <link rel="stylesheet" href="lib/bootstrap/bootstrap.min.css" />
     <link rel="stylesheet" href="lib/bootstrap-icons/bootstrap-icons.min.css" />
     <link rel="stylesheet" href="styles.css" />
@@ -14,43 +14,26 @@
       <nav class="navbar navbar-expand navbar-dark bg-primary w-100">
         <div class="container-fluid">
           <div class="d-flex align-items-center navigation-buttons">
-            <button
-              id="goBackBtn"
-              class="btn btn-primary nav-btn me-1"
-              title="后退"
-            >
+            <button id="goBackBtn" class="btn btn-primary nav-btn me-1" title="后退">
               <i class="bi bi-arrow-left"></i>
             </button>
-            <button
-              id="goForwardBtn"
-              class="btn btn-primary nav-btn me-1"
-              title="前进"
-            >
+            <button id="goForwardBtn" class="btn btn-primary nav-btn me-1" title="前进">
               <i class="bi bi-arrow-right"></i>
             </button>
-            <button
-              id="goUpBtn"
-              class="btn btn-primary nav-btn me-2"
-              title="上一级目录"
-            >
+            <button id="goUpBtn" class="btn btn-prmary nav-btn me-2" title="上一级目录">
               <i class="bi bi-arrow-up"></i>
             </button>
           </div>
-
-          <!-- 搜索框 -->
-          <div class="d-flex flex-grow-1 mx-2">
-            <div class="input-group">
-              <input
-                type="text"
-                id="searchInput"
-                class="form-control"
-                placeholder="搜索文件..."
-                aria-label="搜索文件"
-              />
-              <button class="btn btn-light" type="button" id="searchBtn">
-                <i class="bi bi-search"></i>
-              </button>
-            </div>
+          <div class="nav-right">
+            <button class="floating-nav-item" id="showSidebarBtn" title="导航">
+              <i class="bi bi-list"></i>
+            </button>
+            <button class="floating-nav-item" id="homeBtn" title="首页">
+              <i class="bi bi-house"></i>
+            </button>
+            <button class="floating-nav-item" id="floatingThemeToggleBtn" title="切换主题">
+              <i class="bi bi-moon-fill"></i>
+            </button>
           </div>
         </div>
       </nav>
@@ -113,10 +96,7 @@
         </div>
 
         <!-- 主要内容区 -->
-        <div
-          class="col-md-10 p-0 d-flex flex-column main-content"
-          id="mainContent"
-        >
+        <div class="col-md-10 p-0 d-flex flex-column main-content" id="mainContent">
           <!-- 合并的路径导航 -->
           <div class="bg-light p-2 border-bottom path-navigation">
             <div class="d-flex align-items-center overflow-auto">
@@ -138,19 +118,12 @@
             </div>
             <div class="table-responsive flex-grow-1">
               <table class="table table-hover mb-0" id="fileTable">
-                <thead class="sticky-top bg-white">
-                  <tr>
-                    <th style="width: 40px"></th>
-                    <th>名称</th>
-                    <th class="d-none d-md-table-cell">大小</th>
-                    <th class="d-none d-md-table-cell">修改日期</th>
-                    <th style="width: 100px">操作</th>
-                  </tr>
-                </thead>
                 <tbody id="fileList">
                   <!-- 文件列表将通过JS动态添加 -->
                 </tbody>
               </table>
+
+              <div style="width: 100%;height: 300px"></div>
             </div>
           </div>
         </div>
@@ -170,21 +143,13 @@
           <div class="modal-header">
             <h5 class="modal-title" id="fileContentModalLabel">文件内容</h5>
             <div class="ms-auto">
-              <button
-                type="button"
-                class="btn-close"
-                data-bs-dismiss="modal"
-                aria-label="Close"
-              ></button>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
           </div>
           <div class="modal-body p-0">
             <div class="container-fluid p-0 file-content-container">
               <!-- 文本内容查看器 -->
-              <pre
-                id="fileContentViewer"
-                class="p-3 border rounded bg-light"
-              ></pre>
+              <pre id="fileContentViewer" class="p-3 border rounded bg-light"></pre>
 
               <!-- 图片查看器 -->
               <div id="imageViewer" class="text-center d-none p-2">
@@ -217,16 +182,8 @@
             </div>
           </div>
           <div class="modal-footer">
-            <button
-              type="button"
-              class="btn btn-secondary"
-              data-bs-dismiss="modal"
-            >
-              关闭
-            </button>
-            <a href="#" id="downloadFileBtn" class="btn btn-primary">
-              下载文件
-            </a>
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
+            <a href="#" id="downloadFileBtn" class="btn btn-primary">下载文件</a>
           </div>
         </div>
       </div>
@@ -249,18 +206,10 @@
           <img src="" id="fullscreenImage" alt="图片预览" />
           <!-- 添加图片导航按钮 -->
           <div class="image-navigation-controls">
-            <button
-              type="button"
-              class="btn btn-light rounded-circle"
-              id="prevImageBtn"
-            >
+            <button type="button" class="btn btn-light rounded-circle" id="prevImageBtn">
               <i class="bi bi-chevron-left"></i>
             </button>
-            <button
-              type="button"
-              class="btn btn-light rounded-circle"
-              id="nextImageBtn"
-            >
+            <button type="button" class="btn btn-light rounded-circle" id="nextImageBtn">
               <i class="bi bi-chevron-right"></i>
             </button>
           </div>
@@ -272,23 +221,13 @@
           <div class="video-title-bar">
             <h5 id="videoTitle" class="mb-0"></h5>
           </div>
-          <video controls id="fullscreenVideo">
-            您的浏览器不支持HTML5视频播放
-          </video>
+          <video controls id="fullscreenVideo">您的浏览器不支持HTML5视频播放</video>
           <!-- 添加视频导航按钮 -->
           <div class="video-navigation-controls">
-            <button
-              type="button"
-              class="btn btn-light rounded-circle"
-              id="prevVideoBtn"
-            >
+            <button type="button" class="btn btn-light rounded-circle" id="prevVideoBtn">
               <i class="bi bi-chevron-left"></i>
             </button>
-            <button
-              type="button"
-              class="btn btn-light rounded-circle"
-              id="nextVideoBtn"
-            >
+            <button type="button" class="btn btn-light rounded-circle" id="nextVideoBtn">
               <i class="bi bi-chevron-right"></i>
             </button>
           </div>
@@ -297,72 +236,39 @@
     </div>
 
     <!-- 重命名文件的模态框 -->
-    <div
-      class="modal fade"
-      id="renameModal"
-      tabindex="-1"
-      aria-labelledby="renameModalLabel"
-      aria-hidden="true"
-    >
+    <div class="modal fade" id="renameModal" tabindex="-1" aria-labelledby="renameModalLabel" aria-hidden="true">
       <div class="modal-dialog">
         <div class="modal-content">
           <div class="modal-header">
             <h5 class="modal-title" id="renameModalLabel">重命名文件</h5>
-            <button
-              type="button"
-              class="btn-close"
-              data-bs-dismiss="modal"
-              aria-label="Close"
-            ></button>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
+
           <div class="modal-body">
             <form id="renameForm">
               <div class="mb-3">
                 <label for="newFilename" class="form-label">新文件名</label>
-                <textarea
-                  class="form-control rename-textarea"
-                  id="newFilename"
-                  rows="4"
-                  required
-                ></textarea>
+                <textarea class="form-control rename-textarea" id="newFilename" rows="4" required></textarea>
                 <input type="hidden" id="oldFilePath" />
               </div>
             </form>
           </div>
+
           <div class="modal-footer">
-            <button
-              type="button"
-              class="btn btn-secondary"
-              data-bs-dismiss="modal"
-            >
-              取消
-            </button>
-            <button type="button" class="btn btn-primary" id="confirmRenameBtn">
-              确认
-            </button>
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+            <button type="button" class="btn btn-primary" id="confirmRenameBtn">确认</button>
           </div>
         </div>
       </div>
     </div>
 
     <!-- 删除文件确认模态框 -->
-    <div
-      class="modal fade"
-      id="deleteConfirmModal"
-      tabindex="-1"
-      aria-labelledby="deleteConfirmModalLabel"
-      aria-hidden="true"
-    >
+    <div class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-labelledby="deleteConfirmModalLabel" aria-hidden="true">
       <div class="modal-dialog modal-sm">
         <div class="modal-content">
           <div class="modal-header">
             <h5 class="modal-title" id="deleteConfirmModalLabel">确认删除</h5>
-            <button
-              type="button"
-              class="btn-close"
-              data-bs-dismiss="modal"
-              aria-label="Close"
-            ></button>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
           <div class="modal-body">
             <p>确认要删除以下文件吗？文件将被移至回收站。</p>
@@ -370,16 +276,8 @@
             <input type="hidden" id="deleteFilePath" />
           </div>
           <div class="modal-footer">
-            <button
-              type="button"
-              class="btn btn-secondary"
-              data-bs-dismiss="modal"
-            >
-              取消
-            </button>
-            <button type="button" class="btn btn-danger" id="confirmDeleteBtn">
-              删除
-            </button>
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+            <button type="button" class="btn btn-danger" id="confirmDeleteBtn">删除</button>
           </div>
         </div>
       </div>
@@ -387,43 +285,21 @@
 
     <!-- 操作提示Toast -->
     <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 11">
-      <div
-        id="operationToast"
-        class="toast align-items-center text-white bg-success"
-        role="alert"
-        aria-live="assertive"
-        aria-atomic="true"
-      >
+      <div id="operationToast" class="toast align-items-center text-white bg-success" role="alert" aria-live="assertive" aria-atomic="true">
         <div class="d-flex">
           <div class="toast-body" id="toastMessage">操作成功</div>
-          <button
-            type="button"
-            class="btn-close btn-close-white me-2 m-auto"
-            data-bs-dismiss="toast"
-            aria-label="Close"
-          ></button>
+          <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
         </div>
       </div>
     </div>
 
     <!-- 文件详情模态框 -->
-    <div
-      class="modal fade"
-      id="fileDetailsModal"
-      tabindex="-1"
-      aria-labelledby="fileDetailsModalLabel"
-      aria-hidden="true"
-    >
+    <div class="modal fade" id="fileDetailsModal" tabindex="-1" aria-labelledby="fileDetailsModalLabel" aria-hidden="true">
       <div class="modal-dialog modal-lg">
         <div class="modal-content">
           <div class="modal-header">
             <h5 class="modal-title" id="fileDetailsModalLabel">文件详情</h5>
-            <button
-              type="button"
-              class="btn-close"
-              data-bs-dismiss="modal"
-              aria-label="Close"
-            ></button>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
           <div class="modal-body">
             <div class="text-center mb-3" id="fileDetailsLoading">
@@ -517,34 +393,10 @@
             </div>
           </div>
           <div class="modal-footer">
-            <button
-              type="button"
-              class="btn btn-secondary"
-              data-bs-dismiss="modal"
-            >
-              关闭
-            </button>
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
           </div>
         </div>
       </div>
-    </div>
-
-    <!-- 添加新的圆形导航按钮 -->
-    <div class="floating-nav-button" id="floatingNavBtn">
-      <i class="bi bi-plus"></i>
-    </div>
-
-    <!-- 添加导航菜单 -->
-    <div class="floating-nav-menu" id="floatingNavMenu">
-      <button class="floating-nav-item" id="showSidebarBtn" title="导航">
-        <i class="bi bi-list"></i>
-      </button>
-      <button class="floating-nav-item" id="homeBtn" title="首页">
-        <i class="bi bi-house"></i>
-      </button>
-      <button class="floating-nav-item" id="floatingThemeToggleBtn" title="切换主题">
-        <i class="bi bi-moon-fill"></i>
-      </button>
     </div>
 
     <script src="lib/bootstrap/bootstrap.bundle.min.js"></script>

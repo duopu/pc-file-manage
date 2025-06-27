@@ -1,8 +1,5 @@
 // 全局变量
 let currentPath = ""; // 默认不设置初始路径，等待加载驱动器
-const MAX_RECENT_FILES = 5;
-let isInRecycleBin = false; // 标记是否在回收站中
-let currentFileToDelete = ""; // 当前要删除的文件路径
 
 // 添加一个变量用于跟踪当前媒体请求
 let currentMediaRequest = null;
@@ -33,9 +30,7 @@ const fileTable = document.getElementById("fileTable");
 const loadingIndicator = document.getElementById("loadingIndicator");
 const pathBreadcrumb = document.getElementById("pathBreadcrumb");
 const statusInfo = document.getElementById("statusInfo");
-const currentPathDisplay = document.getElementById("currentPath");
-const searchInput = document.getElementById("searchInput");
-const searchBtn = document.getElementById("searchBtn");
+
 const fileContentModal = new bootstrap.Modal(
   document.getElementById("fileContentModal")
 );
@@ -106,11 +101,6 @@ const imageTitle = document.getElementById("imageTitle");
 // 响应式布局元素
 const sidebar = document.getElementById("sidebar");
 const mainContent = document.getElementById("mainContent");
-
-// 移动端导航元素
-const mobileNav = document.getElementById("mobileNav");
-const showSidebarBtn = document.getElementById("showSidebarBtn");
-const homeBtn = document.getElementById("homeBtn");
 
 // 页面加载完成后初始化
 document.addEventListener("DOMContentLoaded", () => {
@@ -238,7 +228,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const floatingThemeToggleBtn = document.getElementById('floatingThemeToggleBtn');
 
   if (floatingThemeToggleBtn) {
-    floatingThemeToggleBtn.addEventListener('click', function(e) {
+    floatingThemeToggleBtn.addEventListener('click', function (e) {
       e.stopPropagation();
       toggleTheme();
       // 同步图标
@@ -251,8 +241,8 @@ document.addEventListener("DOMContentLoaded", () => {
         }
       }
       // 关闭菜单
-      floatingNavBtn.classList.remove('active');
-      floatingNavMenu.classList.remove('show');
+      // floatingNavBtn.classList.remove('active');
+      // floatingNavMenu.classList.remove('show');
     });
     // 初始化时同步图标
     const icon = floatingThemeToggleBtn.querySelector('i');
@@ -268,7 +258,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // 绑定侧边栏关闭按钮事件
   const sidebarCloseBtn = document.getElementById('sidebarCloseBtn');
   if (sidebarCloseBtn) {
-    sidebarCloseBtn.addEventListener('click', function() {
+    sidebarCloseBtn.addEventListener('click', function () {
       hideSidebar();
     });
   }
@@ -412,10 +402,10 @@ function loadFolderWithoutHistory(path) {
     loadingIndicator.style.display = "flex";
 
     // 发送请求获取文件夹内容
-    fetch(`/api/folder?path=${encodeURIComponent(folderPath)}`)
+    fetch(`/api/folder?path=${ encodeURIComponent(folderPath) }`)
       .then(response => {
         if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
+          throw new Error(`HTTP error! status: ${ response.status }`);
         }
         return response.json();
       })
@@ -459,7 +449,7 @@ function loadFolderWithoutHistory(path) {
         });
 
         // 更新状态信息
-        statusInfo.textContent = `${data.files.length} 个项目`;
+        statusInfo.textContent = `${ data.files.length } 个项目`;
 
         // 隐藏加载指示器，显示文件表格
         loadingIndicator.style.display = "none";
@@ -477,7 +467,7 @@ function loadFolderWithoutHistory(path) {
         errorCell.innerHTML = `
           <i class="bi bi-exclamation-circle fs-1 d-block mb-3"></i>
           <h5>访问文件夹失败</h5>
-          <p>${error.message}</p>
+          <p>${ error.message }</p>
           <p class="text-muted small">这可能是由于权限不足或路径不存在</p>
           <button class="btn btn-outline-primary mt-2" id="backBtn">
               <i class="bi bi-arrow-left"></i> 返回上一级
@@ -639,7 +629,7 @@ async function loadDrives() {
   try {
     const response = await fetch("/api/drives");
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+      throw new Error(`HTTP error! status: ${ response.status }`);
     }
 
     const data = await response.json();
@@ -654,7 +644,7 @@ async function loadDrives() {
         li.className =
           "list-group-item list-group-item-action d-flex align-items-center";
         li.dataset.path = drive.path;
-        li.innerHTML = `<i class="bi bi-hdd me-2"></i> ${drive.name}`;
+        li.innerHTML = `<i class="bi bi-hdd me-2"></i> ${ drive.name }`;
 
         li.addEventListener("click", () => {
           loadFolder(drive.path);
@@ -681,7 +671,7 @@ async function loadDrives() {
     drivesList.innerHTML = `
             <li class="list-group-item text-danger">
                 <i class="bi bi-exclamation-triangle me-2"></i>
-                加载失败: ${error.message}
+                加载失败: ${ error.message }
             </li>
             <li class="list-group-item list-group-item-action d-flex align-items-center" data-path="C:">
                 <i class="bi bi-hdd me-2"></i> C:
@@ -720,23 +710,6 @@ function bindEventListeners() {
       });
     });
 
-  // 搜索按钮点击事件
-  searchBtn.addEventListener("click", () => {
-    const query = searchInput.value.trim();
-    if (query) {
-      searchFiles(query);
-    }
-  });
-
-  // 搜索输入框回车事件
-  searchInput.addEventListener("keypress", (e) => {
-    if (e.key === "Enter") {
-      const query = searchInput.value.trim();
-      if (query) {
-        searchFiles(query);
-      }
-    }
-  });
 
   // 重命名确认按钮
   confirmRenameBtn.addEventListener("click", () => {
@@ -761,11 +734,11 @@ async function loadFolder(path) {
 
     // 发送请求获取文件夹内容
     const response = await fetch(
-      `/api/folder?path=${encodeURIComponent(folderPath)}`
+      `/api/folder?path=${ encodeURIComponent(folderPath) }`
     );
 
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+      throw new Error(`HTTP error! status: ${ response.status }`);
     }
 
     const data = await response.json();
@@ -812,7 +785,7 @@ async function loadFolder(path) {
     });
 
     // 更新状态信息
-    statusInfo.textContent = `${data.files.length} 个项目`;
+    statusInfo.textContent = `${ data.files.length } 个项目`;
 
     // 隐藏加载指示器，显示文件表格
     loadingIndicator.style.display = "none";
@@ -829,7 +802,7 @@ async function loadFolder(path) {
     errorCell.innerHTML = `
             <i class="bi bi-exclamation-circle fs-1 d-block mb-3"></i>
             <h5>访问文件夹失败</h5>
-            <p>${error.message}</p>
+            <p>${ error.message }</p>
             <p class="text-muted small">这可能是由于权限不足或路径不存在</p>
             <button class="btn btn-outline-primary mt-2" id="backBtn">
                 <i class="bi bi-arrow-left"></i> 返回上一级
@@ -921,7 +894,7 @@ function createFileRow(file) {
   // 文件图标
   const iconCell = document.createElement("td");
   const icon = document.createElement("i");
-  icon.className = `bi file-icon ${getFileIconClass(file)}`;
+  icon.className = `bi file-icon ${ getFileIconClass(file) }`;
   iconCell.appendChild(icon);
   row.appendChild(iconCell);
 
@@ -1078,7 +1051,7 @@ function createActionButton(title, iconClass, clickHandler) {
   const button = document.createElement("button");
   button.className = "btn btn-sm btn-light file-action-btn";
   button.title = title;
-  button.innerHTML = `<i class="bi ${iconClass}"></i>`;
+  button.innerHTML = `<i class="bi ${ iconClass }"></i>`;
   button.addEventListener("click", (e) => {
     e.stopPropagation(); // 阻止事件冒泡
     clickHandler();
@@ -1387,11 +1360,11 @@ async function viewFile(file) {
         // 获取文件内容
         console.log("请求文件内容:", file.path);
         const response = await fetch(
-          `/api/file/content?path=${encodeURIComponent(file.path)}`
+          `/api/file/content?path=${ encodeURIComponent(file.path) }`
         );
 
         if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
+          throw new Error(`HTTP error! status: ${ response.status }`);
         }
 
         const data = await response.json();
@@ -1407,9 +1380,9 @@ async function viewFile(file) {
           fileContentViewer.style.display = "block";
 
           // 设置下载链接
-          downloadFileBtn.href = `/api/file/download?path=${encodeURIComponent(
+          downloadFileBtn.href = `/api/file/download?path=${ encodeURIComponent(
             file.path
-          )}`;
+          ) }`;
           downloadFileBtn.download = file.name;
         } else if (data.type === "audio") {
           // 显示音频
@@ -1425,14 +1398,14 @@ async function viewFile(file) {
               "音频加载失败";
             unsupportedFileViewer.querySelector("p").innerHTML = `
                             可能是权限问题或格式不支持<br>
-                            <small class="text-muted">URL: ${data.url}</small>
+                            <small class="text-muted">URL: ${ data.url }</small>
                         `;
           };
 
           // 设置音频源 - 添加时间戳防止缓存
           const timestamp = Date.now();
           const randomStr = Math.random().toString(36).substring(2, 8);
-          previewAudio.src = `${data.url}?t=${timestamp}&r=${randomStr}`;
+          previewAudio.src = `${ data.url }?t=${ timestamp }&r=${ randomStr }`;
           previewAudio.type = data.mimeType;
 
           // 设置下载链接
@@ -1454,14 +1427,14 @@ async function viewFile(file) {
 
         // 显示错误信息
         resetFileViewers();
-        fileContentViewer.textContent = `获取文件内容失败: ${error.message}`;
+        fileContentViewer.textContent = `获取文件内容失败: ${ error.message }`;
         fileContentViewer.style.display = "block";
         fileContentModal.show();
       }
     }
   } catch (error) {
     console.error("查看文件失败:", error);
-    console.warn(`查看文件失败: ${error.message}`);
+    console.warn(`查看文件失败: ${ error.message }`);
     imageLoadingInProgress = false; // 确保重置图片加载状态
   }
 }
@@ -1516,12 +1489,12 @@ function showToast(message, type = 'success') {
 // 删除文件
 async function deleteFile(filePath) {
   try {
-    const response = await fetch(`/api/file?path=${encodeURIComponent(filePath)}`, {
+    const response = await fetch(`/api/file?path=${ encodeURIComponent(filePath) }`, {
       method: 'DELETE'
     });
 
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+      throw new Error(`HTTP error! status: ${ response.status }`);
     }
 
     const data = await response.json();
@@ -1535,7 +1508,7 @@ async function deleteFile(filePath) {
     }
   } catch (error) {
     console.error('删除文件失败:', error);
-    showToast(`删除文件失败: ${error.message}`, 'error');
+    showToast(`删除文件失败: ${ error.message }`, 'error');
   }
 }
 
@@ -1562,7 +1535,7 @@ async function renameFile(oldPath, newName) {
     });
 
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+      throw new Error(`HTTP error! status: ${ response.status }`);
     }
 
     const data = await response.json();
@@ -1578,74 +1551,10 @@ async function renameFile(oldPath, newName) {
     }
   } catch (error) {
     console.error("重命名文件失败:", error);
-    console.warn(`重命名文件失败: ${error.message}`);
+    console.warn(`重命名文件失败: ${ error.message }`);
   }
 }
 
-// 搜索文件
-async function searchFiles(query) {
-  try {
-    // 显示加载指示器
-    fileTable.style.display = "none";
-    loadingIndicator.style.display = "flex";
-
-    // 发送搜索请求
-    const response = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    const data = await response.json();
-
-    // 清空文件列表
-    fileList.innerHTML = "";
-
-    // 更新状态信息
-    statusInfo.textContent = `搜索 "${query}" 的结果: ${
-      data.results ? data.results.length : 0
-    } 个项目`;
-    currentPathDisplay.textContent = `搜索: ${query}`;
-
-    // 更新面包屑导航（搜索模式）
-    pathBreadcrumb.innerHTML = `
-            <li class="breadcrumb-item"><a href="#" data-path="${currentPath}">返回文件夹</a></li>
-            <li class="breadcrumb-item active">搜索结果: ${query}</li>
-        `;
-
-    // 添加事件监听器返回当前文件夹
-    pathBreadcrumb.querySelector("a").addEventListener("click", (e) => {
-      e.preventDefault();
-      loadFolder(e.target.dataset.path);
-    });
-
-    if (data.results && data.results.length > 0) {
-      // 添加搜索结果到列表
-      data.results.forEach((file) => {
-        const row = createSearchResultRow(file, query);
-        fileList.appendChild(row);
-      });
-    } else {
-      // 没有搜索结果
-      const emptyRow = document.createElement("tr");
-      const emptyCell = document.createElement("td");
-      emptyCell.colSpan = 5;
-      emptyCell.className = "text-center p-4 text-muted";
-      emptyCell.textContent = "没有找到匹配的文件";
-      emptyRow.appendChild(emptyCell);
-      fileList.appendChild(emptyRow);
-    }
-
-    // 隐藏加载指示器，显示文件表格
-    loadingIndicator.style.display = "none";
-    fileTable.style.display = "table";
-  } catch (error) {
-    console.error("搜索文件失败:", error);
-    console.warn(`搜索文件失败: ${error.message}`);
-    loadingIndicator.style.display = "none";
-    fileTable.style.display = "table";
-  }
-}
 
 // 创建搜索结果行
 function createSearchResultRow(file, query) {
@@ -1691,7 +1600,7 @@ function createSearchResultRow(file, query) {
   // 文件图标
   const iconCell = document.createElement("td");
   const icon = document.createElement("i");
-  icon.className = `bi file-icon ${getFileIconClass(file)}`;
+  icon.className = `bi file-icon ${ getFileIconClass(file) }`;
   iconCell.appendChild(icon);
   row.appendChild(iconCell);
 
@@ -1705,7 +1614,7 @@ function createSearchResultRow(file, query) {
     const highlight = file.name.substring(index, index + query.length);
     const after = file.name.substring(index + query.length);
 
-    nameCell.innerHTML = `${before}<span class="search-highlight">${highlight}</span>${after}`;
+    nameCell.innerHTML = `${ before }<span class="search-highlight">${ highlight }</span>${ after }`;
   } else {
     nameCell.textContent = file.name;
   }
@@ -1827,8 +1736,8 @@ function showCenteredMessage(message, type = 'success') {
 
 // 绑定移动端导航事件
 function bindMobileNavEvents() {
-  const floatingNavBtn = document.getElementById('floatingNavBtn');
-  const floatingNavMenu = document.getElementById('floatingNavMenu');
+  // const floatingNavBtn = document.getElementById('floatingNavBtn');
+  // const floatingNavMenu = document.getElementById('floatingNavMenu');
   const showSidebarBtn = document.getElementById('showSidebarBtn');
   const homeBtn = document.getElementById('homeBtn');
 
@@ -1839,25 +1748,26 @@ function bindMobileNavEvents() {
   let initialX, initialY, startX, startY;
 
   function setTranslate(x, y, el) {
-    el.style.transform = `translate3d(${x}px, ${y}px, 0)`;
+    el.style.transform = `translate3d(${ x }px, ${ y }px, 0)`;
   }
-  function updateMenuPosition(x, y) {
-    const btnW = floatingNavBtn.offsetWidth;
-    const btnH = floatingNavBtn.offsetHeight;
-    const menuW = floatingNavMenu.offsetWidth;
-    const menuH = floatingNavMenu.offsetHeight;
 
-    // 计算菜单位置，使其居中于按钮
-    let left = x - (menuW - btnW) / 2;
-    let top = y - (menuH - btnH) / 2;
-
-    // 边界检测，保证菜单不会超出屏幕
-    left = Math.max(0, Math.min(left, window.innerWidth - menuW));
-    top = Math.max(0, Math.min(top, window.innerHeight - menuH));
-
-    floatingNavMenu.style.left = `${left}px`;
-    floatingNavMenu.style.top = `${top}px`;
-  }
+  // function updateMenuPosition(x, y) {
+  //   const btnW = floatingNavBtn.offsetWidth;
+  //   const btnH = floatingNavBtn.offsetHeight;
+  //   const menuW = floatingNavMenu.offsetWidth;
+  //   const menuH = floatingNavMenu.offsetHeight;
+  //
+  //   // 计算菜单位置，使其居中于按钮
+  //   let left = x - (menuW - btnW) / 2;
+  //   let top = y - (menuH - btnH) / 2;
+  //
+  //   // 边界检测，保证菜单不会超出屏幕
+  //   left = Math.max(0, Math.min(left, window.innerWidth - menuW));
+  //   top = Math.max(0, Math.min(top, window.innerHeight - menuH));
+  //
+  //   floatingNavMenu.style.left = `${left}px`;
+  //   floatingNavMenu.style.top = `${top}px`;
+  // }
 
   function onMove(e) {
     let clientX, clientY;
@@ -1881,7 +1791,7 @@ function bindMobileNavEvents() {
     currentX = newX;
     currentY = newY;
     setTranslate(currentX, currentY, floatingNavBtn);
-    updateMenuPosition(currentX, currentY);
+    // updateMenuPosition(currentX, currentY);
   }
 
   function dragStart(e) {
@@ -1891,7 +1801,7 @@ function bindMobileNavEvents() {
     if (e.type === 'touchstart') {
       startX = e.touches[0].clientX;
       startY = e.touches[0].clientY;
-      window.addEventListener('touchmove', onMove, {passive: false});
+      window.addEventListener('touchmove', onMove, { passive: false });
       window.addEventListener('touchend', dragEnd, false);
     } else {
       startX = e.clientX;
@@ -1907,7 +1817,9 @@ function bindMobileNavEvents() {
     if (!isDragging) return;
     isDragging = false;
     dragJustFinished = true;
-    setTimeout(() => { dragJustFinished = false; }, 120);
+    setTimeout(() => {
+      dragJustFinished = false;
+    }, 120);
     saveButtonPosition(currentX, currentY);
     window.removeEventListener('mousemove', onMove, false);
     window.removeEventListener('mouseup', dragEnd, false);
@@ -1919,6 +1831,7 @@ function bindMobileNavEvents() {
     localStorage.setItem('floatingNavBtnX', x);
     localStorage.setItem('floatingNavBtnY', y);
   }
+
   function loadButtonPosition() {
     const savedX = localStorage.getItem('floatingNavBtnX');
     const savedY = localStorage.getItem('floatingNavBtnY');
@@ -1927,74 +1840,69 @@ function bindMobileNavEvents() {
       currentY = parseInt(savedY);
     }
     setTranslate(currentX, currentY, floatingNavBtn);
-    updateMenuPosition(currentX, currentY);
+    // updateMenuPosition(currentX, currentY);
   }
 
-  function layoutFloatingNavItems() {
-    const menu = document.getElementById('floatingNavMenu');
-    const items = menu.querySelectorAll('.floating-nav-item');
-    const radius = 63; // 半径，单位px，原来是48
-    const centerX = 60; // 容器宽度一半
-    const centerY = 60; // 容器高度一半
-    const N = items.length;
-    for (let i = 0; i < N; i++) {
-      const angle = (Math.PI * 2 / N) * i - Math.PI / 2;
-      const x = centerX + radius * Math.cos(angle);
-      const y = centerY + radius * Math.sin(angle);
-      items[i].style.left = x + 'px';
-      items[i].style.top = y + 'px';
-    }
-  }
+  // function layoutFloatingNavItems() {
+  //   const menu = document.getElementById('floatingNavMenu');
+  //   const items = menu.querySelectorAll('.floating-nav-item');
+  //   const radius = 63; // 半径，单位px，原来是48
+  //   const centerX = 60; // 容器宽度一半
+  //   const centerY = 60; // 容器高度一半
+  //   const N = items.length;
+  //   for (let i = 0; i < N; i++) {
+  //     const angle = (Math.PI * 2 / N) * i - Math.PI / 2;
+  //     const x = centerX + radius * Math.cos(angle);
+  //     const y = centerY + radius * Math.sin(angle);
+  //     items[i].style.left = x + 'px';
+  //     items[i].style.top = y + 'px';
+  //   }
+  // }
 
-  if (floatingNavBtn) {
-    loadButtonPosition();
-    floatingNavBtn.addEventListener('mousedown', dragStart, false);
-    floatingNavBtn.addEventListener('touchstart', dragStart, {passive: false});
-    floatingNavBtn.addEventListener('click', function(e) {
-      if (isDragging) return;
-      this.classList.toggle('active');
-      floatingNavMenu.classList.toggle('show');
-      if (floatingNavMenu.classList.contains('show')) layoutFloatingNavItems();
-    });
-    floatingNavBtn.addEventListener('touchend', function(e) {
-      if (!moved) {
-        this.classList.toggle('active');
-        floatingNavMenu.classList.toggle('show');
-        if (floatingNavMenu.classList.contains('show')) layoutFloatingNavItems();
-      }
-      isDragging = false;
-    });
-  }
+  // if (floatingNavBtn) {
+  //   loadButtonPosition();
+  //   floatingNavBtn.addEventListener('mousedown', dragStart, false);
+  //   floatingNavBtn.addEventListener('touchstart', dragStart, {passive: false});
+  //   floatingNavBtn.addEventListener('click', function(e) {
+  //     if (isDragging) return;
+  //     this.classList.toggle('active');
+  //     // floatingNavMenu.classList.toggle('show');
+  //     // if (floatingNavMenu.classList.contains('show')) layoutFloatingNavItems();
+  //   });
+  //   floatingNavBtn.addEventListener('touchend', function(e) {
+  //     if (!moved) {
+  //       this.classList.toggle('active');
+  //       // floatingNavMenu.classList.toggle('show');
+  //       // if (floatingNavMenu.classList.contains('show')) layoutFloatingNavItems();
+  //     }
+  //     isDragging = false;
+  //   });
+  // }
 
   window.addEventListener('resize', () => {
-    const btnW = floatingNavBtn.offsetWidth;
-    const btnH = floatingNavBtn.offsetHeight;
-    currentX = Math.max(0, Math.min(currentX, window.innerWidth - btnW));
-    currentY = Math.max(0, Math.min(currentY, window.innerHeight - btnH));
-    setTranslate(currentX, currentY, floatingNavBtn);
-    updateMenuPosition(currentX, currentY);
+    // const btnW = floatingNavBtn.offsetWidth;
+    // const btnH = floatingNavBtn.offsetHeight;
+    // currentX = Math.max(0, Math.min(currentX, window.innerWidth - btnW));
+    // currentY = Math.max(0, Math.min(currentY, window.innerHeight - btnH));
+    // setTranslate(currentX, currentY, floatingNavBtn);
+    // updateMenuPosition(currentX, currentY);
   });
 
   if (showSidebarBtn) {
-    showSidebarBtn.addEventListener('click', function() {
+    showSidebarBtn.addEventListener('click', function () {
       showSidebar();
-      floatingNavBtn.classList.remove('active');
-      floatingNavMenu.classList.remove('show');
+      // floatingNavBtn.classList.remove('active');
+      // floatingNavMenu.classList.remove('show');
     });
   }
   if (homeBtn) {
-    homeBtn.addEventListener('click', function() {
+    homeBtn.addEventListener('click', function () {
       loadFolder("C:");
-      floatingNavBtn.classList.remove('active');
-      floatingNavMenu.classList.remove('show');
+      // floatingNavBtn.classList.remove('active');
+      // floatingNavMenu.classList.remove('show');
     });
   }
-  document.addEventListener('click', function(e) {
-    if (!floatingNavBtn.contains(e.target) && !floatingNavMenu.contains(e.target)) {
-      floatingNavBtn.classList.remove('active');
-      floatingNavMenu.classList.remove('show');
-    }
-  });
+
   document.querySelectorAll("#drivesList li, .shortcut-list li").forEach((item) => {
     item.addEventListener("click", () => {
       if (window.innerWidth < 768 && sidebar.classList.contains("show")) {
@@ -2002,6 +1910,7 @@ function bindMobileNavEvents() {
       }
     });
   });
+
   const observer = new MutationObserver((mutations) => {
     mutations.forEach((mutation) => {
       if (mutation.type === "childList" && mutation.addedNodes.length > 0) {
@@ -2040,10 +1949,10 @@ async function showFileDetails(filePath) {
     // 获取文件详细信息
     let fileDetails;
     try {
-      const response = await fetch(`/api/file/details?path=${encodeURIComponent(filePath)}`);
+      const response = await fetch(`/api/file/details?path=${ encodeURIComponent(filePath) }`);
 
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        throw new Error(`HTTP error! status: ${ response.status }`);
       }
 
       fileDetails = await response.json();
@@ -2053,7 +1962,7 @@ async function showFileDetails(filePath) {
 
       // 显示错误信息
       mediaInfoError.classList.remove('d-none');
-      mediaInfoErrorText.textContent = `获取文件详情失败: ${fetchError.message}`;
+      mediaInfoErrorText.textContent = `获取文件详情失败: ${ fetchError.message }`;
 
       // 隐藏加载中状态，显示内容（虽然有错误）
       fileDetailsLoading.classList.add('d-none');
@@ -2064,7 +1973,7 @@ async function showFileDetails(filePath) {
     // 填充基本信息
     detailsFileName.textContent = fileDetails.name || '未知';
     detailsFilePath.textContent = fileDetails.path || '未知';
-    detailsFileType.textContent = `${fileDetails.type || '未知'} (${fileDetails.extension || '未知'})`;
+    detailsFileType.textContent = `${ fileDetails.type || '未知' } (${ fileDetails.extension || '未知' })`;
     detailsFileSize.textContent = fileDetails.sizeFormatted || '未知';
     detailsFileCreated.textContent = fileDetails.created ? formatDate(new Date(fileDetails.created)) : '未知';
     detailsFileModified.textContent = fileDetails.modified ? formatDate(new Date(fileDetails.modified)) : '未知';
@@ -2133,7 +2042,7 @@ async function showFileDetails(filePath) {
 
     // 显示错误信息
     mediaInfoError.classList.remove('d-none');
-    mediaInfoErrorText.textContent = `显示文件详情失败: ${error.message}`;
+    mediaInfoErrorText.textContent = `显示文件详情失败: ${ error.message }`;
 
     // 隐藏加载中状态，显示内容（虽然有错误）
     fileDetailsLoading.classList.add('d-none');
@@ -2184,14 +2093,14 @@ function collectImagesInFolder(files) {
     }
   });
 
-  console.log(`收集到 ${currentFolderImages.length} 张图片, ${currentFolderVideos.length} 个视频`);
+  console.log(`收集到 ${ currentFolderImages.length } 张图片, ${ currentFolderVideos.length } 个视频`);
 }
 
 // 更新当前图片索引
 function updateCurrentImageIndex(filePath) {
   // 查找当前图片在图片列表中的索引
   currentImageIndex = currentFolderImages.findIndex(img => img.path === filePath);
-  console.log(`当前图片索引: ${currentImageIndex}, 总图片数: ${currentFolderImages.length}`);
+  console.log(`当前图片索引: ${ currentImageIndex }, 总图片数: ${ currentFolderImages.length }`);
 
   // 更新导航按钮状态
   updateImageNavigationButtons();
@@ -2258,67 +2167,67 @@ function loadImage(file) {
     currentMediaRequest = controller;
 
     // 请求图片内容
-    fetch(`/api/file/content?path=${encodeURIComponent(file.path)}`, {
+    fetch(`/api/file/content?path=${ encodeURIComponent(file.path) }`, {
       signal: signal,
     })
-    .then(response => {
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      return response.json();
-    })
-    .then(data => {
-      // 添加时间戳和随机数防止缓存
-      const timestamp = Date.now();
-      const randomStr = Math.random().toString(36).substring(2, 8);
-      const mediaUrl = `${data.url}?t=${timestamp}&r=${randomStr}`;
-
-      // 确保图片预览容器可见
-      mediaPreviewOverlay.classList.remove("d-none");
-      fullscreenImageViewer.classList.remove("d-none");
-
-      // 先清除旧的事件处理器
-      fullscreenImage.onload = null;
-      fullscreenImage.onerror = null;
-
-      // 设置图片加载事件
-      fullscreenImage.onload = () => {
-        console.log("全屏图片加载成功");
-        // 加载完成后标记为非加载状态
-        imageLoadingInProgress = false;
-
-        // 更新当前图片索引
-        updateCurrentImageIndex(file.path);
-      };
-
-      // 图片加载失败处理
-      fullscreenImage.onerror = (e) => {
-        // 只有在图片仍在加载时才处理错误
-        if (imageLoadingInProgress) {
-          console.error("全屏图片加载失败:", e);
-          // 标记为非加载状态
-          imageLoadingInProgress = false;
-          showCenteredMessage("图片加载失败", "error");
+      .then(response => {
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${ response.status }`);
         }
-      };
+        return response.json();
+      })
+      .then(data => {
+        // 添加时间戳和随机数防止缓存
+        const timestamp = Date.now();
+        const randomStr = Math.random().toString(36).substring(2, 8);
+        const mediaUrl = `${ data.url }?t=${ timestamp }&r=${ randomStr }`;
 
-      // 设置图片源
-      fullscreenImage.src = mediaUrl;
+        // 确保图片预览容器可见
+        mediaPreviewOverlay.classList.remove("d-none");
+        fullscreenImageViewer.classList.remove("d-none");
 
-      // 清除当前请求引用
-      currentMediaRequest = null;
-    })
-    .catch(error => {
-      // 如果是中止请求导致的错误，不需要处理
-      if (error.name === "AbortError") {
-        console.log("媒体请求已被中止");
-        return;
-      }
+        // 先清除旧的事件处理器
+        fullscreenImage.onload = null;
+        fullscreenImage.onerror = null;
 
-      console.error("获取媒体文件内容失败:", error);
-      imageLoadingInProgress = false; // 确保重置图片加载状态
-      showCenteredMessage("加载图片失败", "error");
-    });
+        // 设置图片加载事件
+        fullscreenImage.onload = () => {
+          console.log("全屏图片加载成功");
+          // 加载完成后标记为非加载状态
+          imageLoadingInProgress = false;
+
+          // 更新当前图片索引
+          updateCurrentImageIndex(file.path);
+        };
+
+        // 图片加载失败处理
+        fullscreenImage.onerror = (e) => {
+          // 只有在图片仍在加载时才处理错误
+          if (imageLoadingInProgress) {
+            console.error("全屏图片加载失败:", e);
+            // 标记为非加载状态
+            imageLoadingInProgress = false;
+            showCenteredMessage("图片加载失败", "error");
+          }
+        };
+
+        // 设置图片源
+        fullscreenImage.src = mediaUrl;
+
+        // 清除当前请求引用
+        currentMediaRequest = null;
+      })
+      .catch(error => {
+        // 如果是中止请求导致的错误，不需要处理
+        if (error.name === "AbortError") {
+          console.log("媒体请求已被中止");
+          return;
+        }
+
+        console.error("获取媒体文件内容失败:", error);
+        imageLoadingInProgress = false; // 确保重置图片加载状态
+        showCenteredMessage("加载图片失败", "error");
+      });
   } catch (error) {
     console.error("加载图片失败:", error);
     imageLoadingInProgress = false;
@@ -2330,7 +2239,7 @@ function loadImage(file) {
 function updateCurrentVideoIndex(filePath) {
   // 查找当前视频在视频列表中的索引
   currentVideoIndex = currentFolderVideos.findIndex(video => video.path === filePath);
-  console.log(`当前视频索引: ${currentVideoIndex}, 总视频数: ${currentFolderVideos.length}`);
+  console.log(`当前视频索引: ${ currentVideoIndex }, 总视频数: ${ currentFolderVideos.length }`);
 
   // 更新导航按钮状态
   updateVideoNavigationButtons();
@@ -2395,67 +2304,67 @@ function loadVideo(file) {
     currentMediaRequest = controller;
 
     // 请求视频内容
-    fetch(`/api/file/content?path=${encodeURIComponent(file.path)}`, {
+    fetch(`/api/file/content?path=${ encodeURIComponent(file.path) }`, {
       signal: signal,
     })
-    .then(response => {
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      return response.json();
-    })
-    .then(data => {
-      // 添加时间戳和随机数防止缓存
-      const timestamp = Date.now();
-      const randomStr = Math.random().toString(36).substring(2, 8);
-      const mediaUrl = `${data.url}?t=${timestamp}&r=${randomStr}`;
+      .then(response => {
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${ response.status }`);
+        }
+        return response.json();
+      })
+      .then(data => {
+        // 添加时间戳和随机数防止缓存
+        const timestamp = Date.now();
+        const randomStr = Math.random().toString(36).substring(2, 8);
+        const mediaUrl = `${ data.url }?t=${ timestamp }&r=${ randomStr }`;
 
-      // 确保视频预览容器可见
-      mediaPreviewOverlay.classList.remove("d-none");
-      fullscreenVideoViewer.classList.remove("d-none");
+        // 确保视频预览容器可见
+        mediaPreviewOverlay.classList.remove("d-none");
+        fullscreenVideoViewer.classList.remove("d-none");
 
-      // 先清除旧的事件处理器
-      fullscreenVideo.onerror = null;
-      fullscreenVideo.onended = null;
+        // 先清除旧的事件处理器
+        fullscreenVideo.onerror = null;
+        fullscreenVideo.onended = null;
 
-      // 视频加载失败处理
-      fullscreenVideo.onerror = (e) => {
-        console.error("全屏视频加载失败:", e);
-        showCenteredMessage("视频加载失败", "error");
-      };
+        // 视频加载失败处理
+        fullscreenVideo.onerror = (e) => {
+          console.error("全屏视频加载失败:", e);
+          showCenteredMessage("视频加载失败", "error");
+        };
 
-      // 视频加载结束事件
-      fullscreenVideo.onended = () => {
-        console.log("视频播放结束");
-        // 可以选择自动播放下一个视频
-        // showNextVideo();
-      };
+        // 视频加载结束事件
+        fullscreenVideo.onended = () => {
+          console.log("视频播放结束");
+          // 可以选择自动播放下一个视频
+          // showNextVideo();
+        };
 
-      // 设置视频源
-      fullscreenVideo.src = mediaUrl;
-      fullscreenVideo.type = data.mimeType;
+        // 设置视频源
+        fullscreenVideo.src = mediaUrl;
+        fullscreenVideo.type = data.mimeType;
 
-      // 自动播放
-      fullscreenVideo.play().catch((e) => {
-        console.warn("自动播放失败:", e);
+        // 自动播放
+        fullscreenVideo.play().catch((e) => {
+          console.warn("自动播放失败:", e);
+        });
+
+        // 更新当前视频索引和标题
+        updateCurrentVideoIndex(file.path);
+
+        // 清除当前请求引用
+        currentMediaRequest = null;
+      })
+      .catch(error => {
+        // 如果是中止请求导致的错误，不需要处理
+        if (error.name === "AbortError") {
+          console.log("媒体请求已被中止");
+          return;
+        }
+
+        console.error("获取媒体文件内容失败:", error);
+        showCenteredMessage("加载视频失败", "error");
       });
-
-      // 更新当前视频索引和标题
-      updateCurrentVideoIndex(file.path);
-
-      // 清除当前请求引用
-      currentMediaRequest = null;
-    })
-    .catch(error => {
-      // 如果是中止请求导致的错误，不需要处理
-      if (error.name === "AbortError") {
-        console.log("媒体请求已被中止");
-        return;
-      }
-
-      console.error("获取媒体文件内容失败:", error);
-      showCenteredMessage("加载视频失败", "error");
-    });
   } catch (error) {
     console.error("加载视频失败:", error);
     showCenteredMessage("加载视频失败", "error");
