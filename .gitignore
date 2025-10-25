@@ -1,3 +1,4 @@
 
 .idea
 /node_modules
+/src/find-same-name/example-report.html
